@@ -3,13 +3,12 @@ import { NavLink, Outlet, useLocation } from "react-router-dom";
 import {
     Menu,
     X,
-    Home,
-    User,
+
     Settings,
     ChevronDown,
     ChevronRight,
-    Bell,
 } from "lucide-react";
+import Navbar from "../components/navbar/Navbar";
 
 const Layout = () => {
     const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -29,13 +28,13 @@ const Layout = () => {
                     <span className={`${sidebarOpen ? "block" : "hidden"}`}>
                         <img src="/images/logo/logo.svg" alt="Logo" />
                     </span>
-                    {/* <button
+                    <button
                         onClick={() => setSidebarOpen(!sidebarOpen)}
                         className="text-gray-700 p-1 rounded 
                         "
                     >
                         {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
-                    </button> */}
+                    </button>
                 </div>
 
                 {/* Menu */}
@@ -505,32 +504,13 @@ const Layout = () => {
                     width: sidebarOpen ? "calc(100% - 350px)" : "calc(100% - 80px)",
                 }}
             >
-                <div>
-                    <h1 className="text-xl font-bold text-gray-800">Dashboard</h1>
-                </div>
-
-                <div className="flex items-center gap-4">
-                    {/* Notification Icon */}
-                    <button className="p-2 rounded relative">
-                        <Bell />
-                        <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                    </button>
-
-                    {/* User Avatar */}
-                    <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-gray-300">
-                        <img
-                            src="/images/user/avatar.jpg"
-                            alt="User"
-                            className="w-full h-full object-cover"
-                        />
-                    </div>
-                </div>
+                <Navbar></Navbar>
             </header>
 
             {/* Main Content */}
             <main
-                className={`flex-1 p-6 mt-24 transition-all  duration-300 ${sidebarOpen ? "ml-[350px]" : "ml-[100px]"
-                    } bg-gray-100 min-h-screen`}
+                className={`flex-1 p-6 mt-24 transition-all min-h-screen pb-20  duration-300 ${sidebarOpen ? "ml-[350px]" : "ml-[100px]"
+                    } bg-gray-100 `}
             >
                 <Outlet />
             </main>
