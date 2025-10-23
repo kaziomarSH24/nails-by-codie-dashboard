@@ -1,8 +1,11 @@
 import React from 'react'
+import CourseTable from './CourseTable'
 
 const CoursesManagement: React.FC = () => {
     return (
-        <div>CoursesManagement</div>
+        <div>
+            <CourseTable></CourseTable>
+        </div>
     )
 }
 

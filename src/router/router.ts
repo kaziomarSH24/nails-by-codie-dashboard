@@ -8,6 +8,8 @@ import UsersManagement from '../pages/users_management/UsersManagement';
 import StockManagement from '../pages/stock_management/StockManagement';
 import IncomeTracker from '../pages/income_tracker/IncomeTracker';
 import Notification from '../pages/notification/Notification';
+import AddNewCourse from '../pages/courses_management/AddCourse';
+import AddLessonForm from '../pages/courses_management/AddLeason';
 
 export const router = createBrowserRouter([
     {
@@ -41,6 +43,14 @@ export const router = createBrowserRouter([
             {
                 path: "notification",
                 element: React.createElement(Notification)
+            },
+            {
+                path: "course-create",
+                element: React.createElement(AddNewCourse)
+            },
+            {
+                path: "add-leason",
+                element: React.createElement(AddLessonForm)
             }
         ]
     }
