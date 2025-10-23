@@ -1,8 +1,13 @@
 import React from 'react'
+import IncomeOverview from './IncomeOverview'
+import IncomeTable from './IncomeTable'
 
 const IncomeTracker: React.FC = () => {
     return (
-        <div>IncomeTracker</div>
+        <div>
+            <IncomeOverview></IncomeOverview>
+            <IncomeTable/>
+        </div>
     )
 }
 
