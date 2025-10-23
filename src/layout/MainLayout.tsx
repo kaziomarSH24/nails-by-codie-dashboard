@@ -134,62 +134,68 @@ const Layout = () => {
 
 
 
-                        {/* Courses Management*/}
+                        {/* Courses Management */}
                         <li>
                             <NavLink
                                 to="/dashboard/courses-management"
-                                className={`flex items-center gap-7 ${pathName == "/dashboard/courses-management" ? " bg-[#E9E9E9] " : ""}  px-4 py-3 rounded-[44px] transition `}
+                                className={`flex items-center gap-7 ${(pathName === "/dashboard/courses-management" || pathName === "/dashboard/course-create" || pathName === "/dashboard/add-leason")
+                                    ? "bg-[#E9E9E9]" : ""}   px-4 py-3 rounded-[44px] transition`}
                             >
-                                {
-                                    pathName == "/dashboard/courses-management" ? <>
-                                        <span>
-                                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M15.5777 2.43152L13.5777 1.38197C11.8221 0.46066 10.9443 0 10 0C9.05572 0 8.17792 0.46066 6.42231 1.38197L6.10059 1.5508L15.0236 6.64967L19.0403 4.64132C18.3941 3.90949 17.3515 3.36234 15.5777 2.43152Z" fill="url(#paint0_linear_675_946)" />
-                                                <path d="M19.7484 5.96436L15.75 7.96354V11C15.75 11.4142 15.4142 11.75 15 11.75C14.5858 11.75 14.25 11.4142 14.25 11V8.71352L10.75 10.4635V19.904C11.4679 19.7252 12.2848 19.2965 13.5777 18.618L15.5777 17.5685C17.7294 16.4393 18.8052 15.8748 19.4026 14.8603C20 13.8458 20 12.5833 20 10.0585V9.94151C20 8.04891 20 6.86559 19.7484 5.96436Z" fill="url(#paint1_linear_675_946)" />
-                                                <path d="M9.25 19.904V10.4635L0.25164 5.96436C8.9407e-08 6.86559 0 8.04891 0 9.94151V10.0585C0 12.5833 -5.96046e-08 13.8458 0.5974 14.8603C1.19479 15.8748 2.27062 16.4393 4.42228 17.5685L6.42229 18.618C7.71524 19.2965 8.5321 19.7252 9.25 19.904Z" fill="url(#paint2_linear_675_946)" />
-                                                <path d="M0.959717 4.64128L10 9.16146L13.4112 7.45586L4.52459 2.37781L4.42232 2.43148C2.64858 3.3623 1.60593 3.90945 0.959717 4.64128Z" fill="url(#paint3_linear_675_946)" />
-                                                <defs>
-                                                    <linearGradient id="paint0_linear_675_946" x1="12.1661" y1="-1.26114" x2="12.7881" y2="8.55314" gradientUnits="userSpaceOnUse">
-                                                        <stop stop-color="#F2DA87" />
-                                                        <stop offset="0.5" stop-color="#91741A" />
-                                                        <stop offset="1" stop-color="#F2DA87" />
-                                                    </linearGradient>
-                                                    <linearGradient id="paint1_linear_675_946" x1="15.0859" y1="3.32063" x2="18.7968" y2="23.2872" gradientUnits="userSpaceOnUse">
-                                                        <stop stop-color="#F2DA87" />
-                                                        <stop offset="0.5" stop-color="#91741A" />
-                                                        <stop offset="1" stop-color="#F2DA87" />
-                                                    </linearGradient>
-                                                    <linearGradient id="paint2_linear_675_946" x1="4.33594" y1="3.32063" x2="8.04676" y2="23.2872" gradientUnits="userSpaceOnUse">
-                                                        <stop stop-color="#F2DA87" />
-                                                        <stop offset="0.5" stop-color="#91741A" />
-                                                        <stop offset="1" stop-color="#F2DA87" />
-                                                    </linearGradient>
-                                                    <linearGradient id="paint3_linear_675_946" x1="6.79636" y1="1.09125" x2="7.46873" y2="11.0983" gradientUnits="userSpaceOnUse">
-                                                        <stop stop-color="#F2DA87" />
-                                                        <stop offset="0.5" stop-color="#91741A" />
-                                                        <stop offset="1" stop-color="#F2DA87" />
-                                                    </linearGradient>
-                                                </defs>
-                                            </svg>
+                                {pathName === "/dashboard/courses-management" || pathName === "/dashboard/course-create" || pathName === "/dashboard/add-leason" ? (
+                                    <span>
+                                        {/* Active SVG */}
+                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M15.5777 2.43152L13.5777 1.38197C11.8221 0.46066 10.9443 0 10 0C9.05572 0 8.17792 0.46066 6.42231 1.38197L6.10059 1.5508L15.0236 6.64967L19.0403 4.64132C18.3941 3.90949 17.3515 3.36234 15.5777 2.43152Z" fill="url(#paint0_linear_675_946)" />
+                                            <path d="M19.7484 5.96436L15.75 7.96354V11C15.75 11.4142 15.4142 11.75 15 11.75C14.5858 11.75 14.25 11.4142 14.25 11V8.71352L10.75 10.4635V19.904C11.4679 19.7252 12.2848 19.2965 13.5777 18.618L15.5777 17.5685C17.7294 16.4393 18.8052 15.8748 19.4026 14.8603C20 13.8458 20 12.5833 20 10.0585V9.94151C20 8.04891 20 6.86559 19.7484 5.96436Z" fill="url(#paint1_linear_675_946)" />
+                                            <path d="M9.25 19.904V10.4635L0.25164 5.96436C8.9407e-08 6.86559 0 8.04891 0 9.94151V10.0585C0 12.5833 -5.96046e-08 13.8458 0.5974 14.8603C1.19479 15.8748 2.27062 16.4393 4.42228 17.5685L6.42229 18.618C7.71524 19.2965 8.5321 19.7252 9.25 19.904Z" fill="url(#paint2_linear_675_946)" />
+                                            <path d="M0.959717 4.64128L10 9.16146L13.4112 7.45586L4.52459 2.37781L4.42232 2.43148C2.64858 3.3623 1.60593 3.90945 0.959717 4.64128Z" fill="url(#paint3_linear_675_946)" />
+                                            <defs>
+                                                <linearGradient id="paint0_linear_675_946" x1="12.1661" y1="-1.26114" x2="12.7881" y2="8.55314" gradientUnits="userSpaceOnUse">
+                                                    <stop stopColor="#F2DA87" />
+                                                    <stop offset="0.5" stopColor="#91741A" />
+                                                    <stop offset="1" stopColor="#F2DA87" />
+                                                </linearGradient>
+                                                <linearGradient id="paint1_linear_675_946" x1="15.0859" y1="3.32063" x2="18.7968" y2="23.2872" gradientUnits="userSpaceOnUse">
+                                                    <stop stopColor="#F2DA87" />
+                                                    <stop offset="0.5" stopColor="#91741A" />
+                                                    <stop offset="1" stopColor="#F2DA87" />
+                                                </linearGradient>
+                                                <linearGradient id="paint2_linear_675_946" x1="4.33594" y1="3.32063" x2="8.04676" y2="23.2872" gradientUnits="userSpaceOnUse">
+                                                    <stop stopColor="#F2DA87" />
+                                                    <stop offset="0.5" stopColor="#91741A" />
+                                                    <stop offset="1" stopColor="#F2DA87" />
+                                                </linearGradient>
+                                                <linearGradient id="paint3_linear_675_946" x1="6.79636" y1="1.09125" x2="7.46873" y2="11.0983" gradientUnits="userSpaceOnUse">
+                                                    <stop stopColor="#F2DA87" />
+                                                    <stop offset="0.5" stopColor="#91741A" />
+                                                    <stop offset="1" stopColor="#F2DA87" />
+                                                </linearGradient>
+                                            </defs>
+                                        </svg>
+                                    </span>
+                                ) : (
+                                    <span>
+                                        {/* Inactive SVG */}
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M17.5777 4.43152L15.5777 3.38197C13.8221 2.46066 12.9443 2 12 2C11.0557 2 10.1779 2.46066 8.42231 3.38197L8.10059 3.5508L17.0236 8.64967L21.0403 6.64132C20.3941 5.90949 19.3515 5.36234 17.5777 4.43152Z" fill="#989898" />
+                                            <path d="M21.7484 7.96436L17.75 9.96354V13C17.75 13.4142 17.4142 13.75 17 13.75C16.5858 13.75 16.25 13.4142 16.25 13V10.7135L12.75 12.4635V21.904C13.4679 21.7252 14.2848 21.2965 15.5777 20.618L17.5777 19.5685C19.7294 18.4393 20.8052 17.8748 21.4026 16.8603C22 15.8458 22 14.5833 22 12.0585V11.9415C22 10.0489 22 8.86559 21.7484 7.96436Z" fill="#989898" />
+                                            <path d="M11.25 21.904V12.4635L2.25164 7.96436C2 8.86559 2 10.0489 2 11.9415V12.0585C2 14.5833 2 15.8458 2.5974 16.8603C3.19479 17.8748 4.27062 18.4393 6.42228 19.5685L8.42229 20.618C9.71524 21.2965 10.5321 21.7252 11.25 21.904Z" fill="#989898" />
+                                            <path d="M2.95972 6.64131L12 11.1615L15.4112 9.45589L6.52459 4.37784L6.42232 4.43151C4.64858 5.36233 3.60593 5.90948 2.95972 6.64131Z" fill="#989898" />
+                                        </svg>
+                                    </span>
+                                )}
 
-                                        </span>
-
-                                    </> : <>
-                                        <span>
-                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M17.5777 4.43152L15.5777 3.38197C13.8221 2.46066 12.9443 2 12 2C11.0557 2 10.1779 2.46066 8.42231 3.38197L8.10059 3.5508L17.0236 8.64967L21.0403 6.64132C20.3941 5.90949 19.3515 5.36234 17.5777 4.43152Z" fill="#989898" />
-                                                <path d="M21.7484 7.96436L17.75 9.96354V13C17.75 13.4142 17.4142 13.75 17 13.75C16.5858 13.75 16.25 13.4142 16.25 13V10.7135L12.75 12.4635V21.904C13.4679 21.7252 14.2848 21.2965 15.5777 20.618L17.5777 19.5685C19.7294 18.4393 20.8052 17.8748 21.4026 16.8603C22 15.8458 22 14.5833 22 12.0585V11.9415C22 10.0489 22 8.86559 21.7484 7.96436Z" fill="#989898" />
-                                                <path d="M11.25 21.904V12.4635L2.25164 7.96436C2 8.86559 2 10.0489 2 11.9415V12.0585C2 14.5833 2 15.8458 2.5974 16.8603C3.19479 17.8748 4.27062 18.4393 6.42228 19.5685L8.42229 20.618C9.71524 21.2965 10.5321 21.7252 11.25 21.904Z" fill="#989898" />
-                                                <path d="M2.95972 6.64131L12 11.1615L15.4112 9.45589L6.52459 4.37784L6.42232 4.43151C4.64858 5.36233 3.60593 5.90948 2.95972 6.64131Z" fill="#989898" />
-                                            </svg>
-
-                                        </span>
-                                    </>
-                                }
-                                {sidebarOpen && <span className={`${pathName === "/dashboard/courses-management"
-                                    ? "bg-[#E9E9E9] text-transparent bg-gradient-to-r from-[#F2DA87] via-[#91741A] to-[#F2DA87] bg-clip-text"
-                                    : ""
-                                    }`} > Courses Management</span>}
+                                {sidebarOpen && (
+                                    <span
+                                        className={`${pathName === "/dashboard/courses-management" ||
+                                            pathName === "/dashboard/course-create" || pathName === "/dashboard/add-leason"
+                                            ? "text-transparent bg-gradient-to-r from-[#F2DA87] via-[#91741A] to-[#F2DA87] bg-clip-text"
+                                            : ""
+                                            }`}
+                                    >
+                                        Courses Management
+                                    </span>
+                                )}
                             </NavLink>
                         </li>
 
