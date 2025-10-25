@@ -2,7 +2,7 @@
 import React, { useState } from 'react'
 import { FaEnvelope, FaLock } from "react-icons/fa";
 import { IoEyeOff, IoEye } from "react-icons/io5";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const LoginFrom = () => {
     const [passwordVisible, setPasswordVisible] = useState(false);
@@ -16,10 +16,12 @@ const LoginFrom = () => {
     const togglePassword = () => {
         setPasswordVisible(!passwordVisible);
     };
+    const navigate = useNavigate();
 
     const handleSubmit = (e) => {
         e.preventDefault();
         console.log("Login Data:", formData);
+        navigate("/dashboard")
         // Add your login logic here (e.g., API call)
     };
     return (
@@ -72,7 +74,7 @@ const LoginFrom = () => {
                             <label className=' text-sm font-medium text-[#989898] ' htmlFor="">Remember password</label>
                         </div>
                         <div>
-                            <Link className=' text-xs font-medium bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] text-transparent bg-clip-text ' to={""}>Forget Password?</Link>
+                            <Link className=' text-xs font-medium bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] text-transparent bg-clip-text ' to={"/email-verify"}>Forget Password?</Link>
                         </div>
                     </div>
 

@@ -12,11 +12,26 @@ import AddNewCourse from '../pages/courses_management/AddCourse';
 import AddLessonForm from '../pages/courses_management/AddLeason';
 import RewardsSystem from '../pages/rewards_system/RewardsSystem';
 import LoginFrom from '../authentication/LoginFrom';
+import EmailVerifyFrom from '../authentication/EmailVerifyFrom';
+import OtpVerify from './../authentication/OtpVerify';
+import NewPasswordSet from '../authentication/NewPasswordSet';
 
 export const router = createBrowserRouter([
     {
         path: "/",
         element: React.createElement(LoginFrom)
+    },
+    {
+        path: "/email-verify",
+        element: React.createElement(EmailVerifyFrom)
+    },
+    {
+        path: "/otp-verify",
+        element: React.createElement(OtpVerify)
+    },
+    {
+        path: "/new-password-set",
+        element: React.createElement(NewPasswordSet)
     },
     {
         path: "/dashboard",
