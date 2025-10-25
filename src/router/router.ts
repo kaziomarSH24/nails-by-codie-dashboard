@@ -10,6 +10,7 @@ import IncomeTracker from '../pages/income_tracker/IncomeTracker';
 import Notification from '../pages/notification/Notification';
 import AddNewCourse from '../pages/courses_management/AddCourse';
 import AddLessonForm from '../pages/courses_management/AddLeason';
+import RewardsSystem from '../pages/rewards_system/RewardsSystem';
 
 export const router = createBrowserRouter([
     {
@@ -51,6 +52,10 @@ export const router = createBrowserRouter([
             {
                 path: "add-leason",
                 element: React.createElement(AddLessonForm)
+            },
+            {
+                path: "rewards-system",
+                element: React.createElement(RewardsSystem)
             }
         ]
     }
