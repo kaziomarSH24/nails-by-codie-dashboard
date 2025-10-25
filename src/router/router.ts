@@ -11,8 +11,13 @@ import Notification from '../pages/notification/Notification';
 import AddNewCourse from '../pages/courses_management/AddCourse';
 import AddLessonForm from '../pages/courses_management/AddLeason';
 import RewardsSystem from '../pages/rewards_system/RewardsSystem';
+import LoginFrom from '../authentication/LoginFrom';
 
 export const router = createBrowserRouter([
+    {
+        path: "/",
+        element: React.createElement(LoginFrom)
+    },
     {
         path: "/dashboard",
         element: React.createElement(MainLayout),
