@@ -15,6 +15,10 @@ import LoginFrom from '../authentication/LoginFrom';
 import EmailVerifyFrom from '../authentication/EmailVerifyFrom';
 import OtpVerify from './../authentication/OtpVerify';
 import NewPasswordSet from '../authentication/NewPasswordSet';
+import Profile from '../pages/setting/Profile';
+import TermCondiction from '../pages/setting/TermCondiction';
+import Faq from '../pages/setting/Faq';
+import ContactInfo from '../pages/setting/ContactInfo';
 
 export const router = createBrowserRouter([
     {
@@ -76,7 +80,24 @@ export const router = createBrowserRouter([
             {
                 path: "rewards-system",
                 element: React.createElement(RewardsSystem)
+            },
+            {
+                path: "settings/profile",
+                element: React.createElement(Profile)
+            },
+            {
+                path: "settings/term-condiction",
+                element: React.createElement(TermCondiction)
+            },
+            {
+                path: "settings/faq",
+                element: React.createElement(Faq)
+            },
+            {
+                path: "settings/contact-info",
+                element: React.createElement(ContactInfo)
             }
+
         ]
     }
 ]);
