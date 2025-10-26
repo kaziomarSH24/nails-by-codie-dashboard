@@ -69,7 +69,7 @@ const Navbar = () => {
                 }
 
 
- {
+                {
                     pathName == "/dashboard/stock-management" && <>
                         <div>
                             <h1 className=" text-textColor text-3xl font-medium  ">Stock Management</h1>
@@ -82,6 +82,79 @@ const Navbar = () => {
 
                     </>
                 }
+
+
+                {
+                    pathName == "/dashboard/income-tracker" && <>
+                        <div>
+                            <h1 className=" text-textColor text-3xl font-medium  ">Income Tracker</h1>
+                            <p className=' text-textColor text-xl mt-1 ' >
+                                Manage and monitor all Users stock
+                            </p>
+
+                        </div>
+
+
+                    </>
+                }
+
+
+                {
+                    pathName == "/dashboard/rewards-system" && <>
+                        <div>
+                            <h1 className=" text-textColor text-3xl font-medium  ">Rewards System</h1>
+                            <p className=' text-textColor text-xl mt-1 ' >
+                                Manage and monitor all Users stock
+                            </p>
+
+                        </div>
+
+
+                    </>
+                }
+                {
+                    pathName == "/dashboard/settings/profile" && <>
+                        <div>
+                            <h1 className=" text-textColor text-3xl font-medium  ">Settings</h1>
+                            <p className=' text-textColor text-xl mt-1 ' >
+                                Manage and monitor all Users stock
+                            </p>
+
+                        </div>
+
+
+                    </>
+                }
+
+
+                {
+                    pathName == "/dashboard/settings/term-condiction" && <>
+                        <div>
+                            <h1 className=" text-textColor text-3xl font-medium  ">Settings</h1>
+                            <p className=' text-textColor text-xl mt-1 ' >
+                                Manage and monitor all Users stock
+                            </p>
+
+                        </div>
+
+
+                    </>
+                }
+                {
+                    pathName == "/dashboard/settings/faq" && <>
+                        <div>
+                            <h1 className=" text-textColor text-3xl font-medium  ">Settings</h1>
+                            <p className=' text-textColor text-xl mt-1 ' >
+                                Manage and monitor all Users stock
+                            </p>
+
+                        </div>
+
+
+                    </>
+                }
+
+
 
 
 
