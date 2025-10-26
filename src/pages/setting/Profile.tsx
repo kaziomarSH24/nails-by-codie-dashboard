@@ -102,7 +102,7 @@ const Profile: React.FC = () => {
                     {/* Buttons */}
                     <div className="mt-8 space-y-3">
                         <button
-                            className="w-full py-3 rounded-lg text-center text-[#3A3734] font-bold bg-gradient-to-b from-[#f9e07f] to-[#d4af37] hover:opacity-90 transition duration-200 shadow-md"
+                            className="w-full py-3 rounded-lg text-white font-bold bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] transition-colors duration-200 shadow-md mt-14   "
                         >
                             Save changes
                         </button>
