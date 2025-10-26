@@ -498,9 +498,9 @@ const Layout = () => {
                                 <ul className="pl-12 mt-2 space-y-1">
                                     <li>
                                         <NavLink
-                                            to="/settings/profile"
+                                            to="/dashboard/settings/profile"
                                             className={`block px-4 py-2 rounded transition 
-                                                 ${pathName === "/settings/profile"
+                                                ${pathName === "/dashboard/settings/profile"
                                                     ? "bg-[#E9E9E9] text-transparent bg-gradient-to-r from-[#F2DA87] via-[#91741A] to-[#F2DA87] bg-clip-text"
                                                     : "text-[#989898]"
                                                 }`}
@@ -510,26 +510,38 @@ const Layout = () => {
                                     </li>
                                     <li>
                                         <NavLink
-                                            to="/settings/security"
+                                            to="/dashboard/settings/term-condiction"
                                             className={`block px-4 py-2 rounded transition 
-                                             ${pathName === "/settings/security"
+                                            ${pathName === "/dashboard/settings/term-condiction"
                                                     ? "bg-[#E9E9E9] text-transparent bg-gradient-to-r from-[#F2DA87] via-[#91741A] to-[#F2DA87] bg-clip-text"
                                                     : "text-[#989898]"
                                                 }`}
                                         >
-                                            Security
+                                            Terms & Conditions
                                         </NavLink>
                                     </li>
                                     <li>
                                         <NavLink
-                                            to="/settings/notifications"
+                                            to="/dashboard/settings/faq"
                                             className={`block px-4 py-2 rounded transition 
-                                             ${pathName === "/settings/notifications"
+                                            ${pathName === "/dashboard/settings/faq"
                                                     ? "bg-[#E9E9E9] text-transparent bg-gradient-to-r from-[#F2DA87] via-[#91741A] to-[#F2DA87] bg-clip-text"
                                                     : "text-[#989898]"
                                                 }`}
                                         >
-                                            Notifications
+                                            FAQ
+                                        </NavLink>
+                                    </li>
+                                    <li>
+                                        <NavLink
+                                            to="/dashboard/settings/contact-info"
+                                            className={`block px-4 py-2 rounded transition 
+                                            ${pathName === "/dashboard/settings/contact-info"
+                                                    ? "bg-[#E9E9E9] text-transparent bg-gradient-to-r from-[#F2DA87] via-[#91741A] to-[#F2DA87] bg-clip-text"
+                                                    : "text-[#989898]"
+                                                }`}
+                                        >
+                                            Contact Info
                                         </NavLink>
                                     </li>
                                 </ul>
