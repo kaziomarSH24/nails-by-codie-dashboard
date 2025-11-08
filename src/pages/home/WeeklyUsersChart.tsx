@@ -1,5 +1,5 @@
 // WeeklyUsersChart.jsx
-import React, { useState } from "react";
+import  { useState } from "react";
 import {
     BarChart,
     Bar,

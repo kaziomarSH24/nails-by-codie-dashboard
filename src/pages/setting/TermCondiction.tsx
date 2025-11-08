@@ -1,8 +1,7 @@
 "use client";
-import React, { useState, FormEvent } from "react";
+import React, { useState, type FormEvent } from "react";
 import { Editor } from "primereact/editor";
 import type { EditorTextChangeEvent } from "primereact/editor";
-import { Button } from "primereact/button";
 
 
 const TermCondiction: React.FC = () => {

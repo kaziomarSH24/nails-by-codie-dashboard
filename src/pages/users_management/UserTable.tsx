@@ -1,9 +1,9 @@
 "use client";
-import React, { useState } from "react";
+import { useState } from "react";
 
-import { Search, RefreshCw, Eye } from "lucide-react";
+import { Search, RefreshCw } from "lucide-react";
 import { Input } from "../../components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../../components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "../../components/ui/dialog";
 import { Button } from "../../components/ui/button";
 
 type User = {
@@ -72,7 +72,7 @@ const UserTable = () => {
                                 <td className="px-4 py-2">{user.contact}</td>
                                 <td className="px-4 py-2">
                                     <span
-                                        className={`px-4 py-1 rounded-[4px] text-white text-xs  ${user.status === "Active"
+                                        className={`px-4 py-1 rounded-[4px]  text-xs  ${user.status === "Active"
                                             ? "text-[#24983F] bg-[#EAF6EC] "
                                             : user.status === "Inactive"
                                                 ? "text-[#988E24] bg-[#F5F6EA] "
@@ -84,7 +84,7 @@ const UserTable = () => {
                                 </td>
                                 <td className="px-4 py-2">
                                     <span
-                                        className={`px-4 py-1 rounded-[4px] text-white text-xs  ${user.subscription === "Paid"
+                                        className={`px-4 py-1 rounded-[4px]  text-xs  ${user.subscription === "Paid"
                                             ? "text-[#24983F] bg-[#EAF6EC] "
                                             : user.subscription === "Trial"
                                                 ? "text-[#988E24] bg-[#F5F6EA] "

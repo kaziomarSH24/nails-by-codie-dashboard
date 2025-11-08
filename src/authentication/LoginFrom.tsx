@@ -1,6 +1,5 @@
 
-import React, { useState } from 'react'
-import { FaEnvelope, FaLock } from "react-icons/fa";
+import { useState } from 'react'
 import { IoEyeOff, IoEye } from "react-icons/io5";
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -8,7 +7,7 @@ const LoginFrom = () => {
     const [passwordVisible, setPasswordVisible] = useState(false);
     const [formData, setFormData] = useState({ email: "", password: "" });
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
@@ -18,10 +17,10 @@ const LoginFrom = () => {
     };
     const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         console.log("Login Data:", formData);
-        navigate("/dashboard")
+        navigate("/dashboard");
         // Add your login logic here (e.g., API call)
     };
     return (

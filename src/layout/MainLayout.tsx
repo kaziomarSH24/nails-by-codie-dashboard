@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import {
-    Menu,
-    X,
+    // Menu,
+    // X,
 
     Settings,
     ChevronDown,
@@ -33,7 +33,7 @@ const Layout = () => {
                         className="text-gray-700 p-1 rounded 
                         "
                     >
-                        {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+                        {/* {sidebarOpen ? <X size={20} /> : <Menu size={20} />} */}
                     </button>
                 </div>
 
@@ -372,7 +372,7 @@ const Layout = () => {
 
 
                         {/* Notification*/}
-                        <li>
+                        {/* <li>
                             <NavLink
                                 to="/dashboard/notification"
                                 className={`flex items-center gap-7 ${pathName == "/dashboard/notification" ? " bg-[#E9E9E9] " : ""}  px-4 py-3 rounded-[44px] transition `}
@@ -429,7 +429,7 @@ const Layout = () => {
                                     : ""
                                     }`} >Notification</span>}
                             </NavLink>
-                        </li>
+                        </li> */}
 
 
                         {/* Rewards System*/}

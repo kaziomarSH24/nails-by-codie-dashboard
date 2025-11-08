@@ -1,5 +1,4 @@
 
-import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 
 
@@ -9,7 +8,7 @@ const EmailVerifyFrom = () => {
 
 
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: { preventDefault: () => void; }) => {
         e.preventDefault();
         navigate("/otp-verify")
         // Add your login logic here (e.g., API call)

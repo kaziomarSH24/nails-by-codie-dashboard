@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { IoEyeOff, IoEye } from "react-icons/io5";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const NewPasswordSet = () => {
     const [passwordVisible, setPasswordVisible] = useState(false);
@@ -11,12 +11,12 @@ const NewPasswordSet = () => {
         confirmPassword: "",
     });
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
     const navigate = useNavigate();
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         if (formData.password !== formData.confirmPassword) {
