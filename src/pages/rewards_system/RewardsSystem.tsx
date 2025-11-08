@@ -1,4 +1,3 @@
-import React from 'react'
 import RewardSetting from './RewardSetting'
 import UserReward from './UserReward'
 

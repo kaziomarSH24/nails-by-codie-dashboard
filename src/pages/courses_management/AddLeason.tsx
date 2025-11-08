@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import { Textarea } from "../../components/ui/textarea";
-import { Video } from "lucide-react";
 import CourseLesson from "./CourseLesson";
 
 function AddLessonForm() {
@@ -26,6 +25,8 @@ function AddLessonForm() {
             videoLink,
         });
     };
+
+    console.log(handleSubmit)
 
     return (
         <>

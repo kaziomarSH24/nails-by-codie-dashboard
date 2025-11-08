@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Filter, Eye } from "lucide-react";
+import { useState } from "react";
+import { Filter} from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../../components/ui/dialog";
 import GenerateReports from "./GenerateReports";
@@ -22,7 +22,7 @@ const ITEMS_PER_PAGE = 5;
 
 const IncomeTable = () => {
     const [filterModal, setFilterModal] = useState(false);
-    const [viewData, setViewData] = useState(null);
+    const [viewData, setViewData] = useState<{ id: number; date: string; source: string; item: string; user: string; amount: string; status: string } | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
 
     const totalPages = Math.ceil(allTransactions.length / ITEMS_PER_PAGE);

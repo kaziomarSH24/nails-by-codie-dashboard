@@ -3,27 +3,26 @@ import "react-calendar/dist/Calendar.css";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Textarea } from "../../components/ui/textarea";
-import { Button } from "../../components/ui/button";
 
 export default function AddNewCourse() {
     const [courseTitle, setCourseTitle] = useState("");
     const [description, setDescription] = useState("");
     const [instructor, setInstructor] = useState("");
-    const [rewardPoint, setRewardPoint] = useState(100);
-    const [price, setPrice] = useState(0);
+    const [rewardPoint, setRewardPoint] = useState<number>(100);
+    const [price, setPrice] = useState<number>(0);
     const [duration, setDuration] = useState("9:30 AM");
-    const [thumbnail, setThumbnail] = useState(null);
-    const [preview, setPreview] = useState(null);
+    const [thumbnail, setThumbnail] = useState<File | null>(null);
+    const [preview, setPreview] = useState<string | null>(null);
 
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files && e.target.files[0];
         if (file) {
             setThumbnail(file);
             setPreview(URL.createObjectURL(file)); // create image preview
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         // handle course submission logic here
         console.log({
@@ -83,7 +82,7 @@ export default function AddNewCourse() {
                                 id="rewardPoint"
                                 type="number"
                                 value={rewardPoint}
-                                onChange={(e) => setRewardPoint(e.target.value)}
+                                onChange={(e) => setRewardPoint(Number(e.target.value))}
                                 className="w-full mt-2"
                             />
                         </div>
@@ -98,7 +97,7 @@ export default function AddNewCourse() {
                                 id="price"
                                 type="number"
                                 value={price}
-                                onChange={(e) => setPrice(e.target.value)}
+                                onChange={(e) => setPrice(Number(e.target.value))}
                                 placeholder="$0.00"
                                 className="w-full mt-2"
                             />

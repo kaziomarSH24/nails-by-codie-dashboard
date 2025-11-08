@@ -1,7 +1,7 @@
 
 import React, { useState, type ChangeEvent } from "react";
 import { FaUser, FaPhoneAlt, FaEnvelope, FaLock } from "react-icons/fa";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../../components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../../components/ui/dialog";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";

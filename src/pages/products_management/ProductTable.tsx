@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
-import { Eye, RefreshCcw, Search } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../../components/ui/dialog";
+import { useState } from "react";
+import { Search } from "lucide-react";
+import { Dialog, DialogContent } from "../../components/ui/dialog";
 
 
 const ProductTable = () => {
     const [search, setSearch] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
-    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [selectedProduct, setSelectedProduct] = useState<Product | undefined>(undefined);
     const [open, setOpen] = useState(false);
 
     const itemsPerPage = 5;
@@ -33,17 +33,29 @@ const ProductTable = () => {
     const currentItems = filteredProducts.slice(startIndex, startIndex + itemsPerPage);
 
     // Handle View Click
-    const handleView = (product) => {
+    interface Product {
+        name: string;
+        stock: number;
+        price: string;
+        status: string;
+        date: string;
+        description: string;
+    }
+
+
+    const handleView = (product: Product) => {
         setSelectedProduct(product);
         setOpen(true);
     };
 
+
+
     // Handle Sync Toggle
-    const handleSync = (index) => {
-        const updated = [...products];
-        updated[index].status =
-            updated[index].status === "Synced" ? "Not Synced" : "Synced";
-    };
+    // const handleSync = (index) => {
+    //     const updated = [...products];
+    //     updated[index].status =
+    //         updated[index].status === "Synced" ? "Not Synced" : "Synced";
+    // };
 
     return (
         <div className=" py-8 px-7 shadow shadow-[#00000033] rounded-2xl bg-white ">

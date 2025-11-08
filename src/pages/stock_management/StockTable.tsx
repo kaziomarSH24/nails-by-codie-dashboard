@@ -2,8 +2,7 @@
 import { useState, useMemo } from "react";
 
 
-import { Trash2, Eye } from "lucide-react";
-import { Input } from "../../components/ui/input";
+
 import { Button } from "../../components/ui/button";
 
 
@@ -48,16 +47,23 @@ const ITEMS_PER_PAGE = 2;
 
 export default function StockManagement() {
     const [search, setSearch] = useState("");
+    console.log(setSearch)
     const [modalOpen, setModalOpen] = useState(false);
-    const [modalData, setModalData] = useState<any>(null);
+    console.log(modalOpen)
+    console.log(setModalOpen)
+    const [modalData, setModalData] = useState<StockItem | RestockRequest | null>(null);
+    console.log(modalData)
+    console.log(setModalData)
     const [stockPage, setStockPage] = useState(1);
     const [requestPage, setRequestPage] = useState(1);
     const [activeTab, setActiveTab] = useState<"stock" | "request">("stock");
 
-    const openModal = (data: any) => {
-        setModalData(data);
-        setModalOpen(true);
-    };
+    // const openModal = (data) => {
+    //     setModalData(data);
+    //     setModalOpen(true);
+    // };
+
+    // console.log(open)
 
     // Filtered & paginated stock data
     const filteredStock = useMemo(() =>

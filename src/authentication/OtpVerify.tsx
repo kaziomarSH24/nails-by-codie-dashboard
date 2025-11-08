@@ -67,7 +67,7 @@ const OtpVerify = () => {
                                 value={digit}
                                 onChange={(e) => handleChange(index, e.target.value)}
                                 onKeyDown={(e) => handleKeyDown(e, index)}
-                                ref={(el) => (inputsRef.current[index] = el)}
+                                ref={(el) => { inputsRef.current[index] = el }}
                                 className="w-16 h-16 border border-[#D7D7D7] rounded-xl text-center text-2xl font-semibold text-[#1E1E1E]
                            focus:outline-none focus:ring-2 focus:ring-[#91741A] transition-all duration-150"
                             />

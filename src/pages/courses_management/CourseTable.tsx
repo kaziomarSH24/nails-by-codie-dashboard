@@ -1,11 +1,9 @@
 "use client";
-import React, { useState } from "react";
+import { useState } from "react";
 
 import {
     Plus,
-    PlusCircle,
-    Edit,
-    Trash2,
+
     Search,
     ChevronLeft,
     ChevronRight,
@@ -21,10 +19,18 @@ import { Link } from "react-router-dom";
 
 const CourseTable = () => {
     const [search, setSearch] = useState("");
-    const [openCourseModal, setOpenCourseModal] = useState(false);
+    // const [openCourseModal, setOpenCourseModal] = useState(false);
     const [openLessonModal, setOpenLessonModal] = useState(false);
+    console.log(openLessonModal)
     const [openUpdateModal, setOpenUpdateModal] = useState(false);
-    const [selectedCourse, setSelectedCourse] = useState(null);
+    type Course = {
+        id: number;
+        thumbnail: string;
+        title: string;
+        description: string;
+        status: string;
+    };
+    const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
