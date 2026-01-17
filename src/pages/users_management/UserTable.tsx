@@ -60,7 +60,6 @@ const UserTable = () => {
                             <th className="px-4 py-2 text-center">Email</th>
                             <th className="px-4 py-2 text-center">Contact</th>
                             <th className="px-4 py-2 text-center">Status</th>
-                            <th className="px-4 py-2 text-center">Subscription</th>
                             <th className="px-4 py-2 text-center">Actions</th>
                         </tr>
                     </thead>
@@ -82,7 +81,7 @@ const UserTable = () => {
                                         {user.status}
                                     </span>
                                 </td>
-                                <td className="px-4 py-2">
+                                {/* <td className="px-4 py-2">
                                     <span
                                         className={`px-4 py-1 rounded-[4px]  text-xs  ${user.subscription === "Paid"
                                             ? "text-[#24983F] bg-[#EAF6EC] "
@@ -93,7 +92,7 @@ const UserTable = () => {
                                     >
                                         {user.subscription}
                                     </span>
-                                </td>
+                                </td> */}
                                 <td className="px-4 py-2 flex items-center gap-2">
                                     {/* View Modal */}
                                     <Dialog>

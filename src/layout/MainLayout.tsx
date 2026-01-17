@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import {
     // Menu,
@@ -9,15 +9,51 @@ import {
     ChevronRight,
 } from "lucide-react";
 import Navbar from "../components/navbar/Navbar";
+import { useAdminLogoutMutation } from "../api/auth/authApi";
+
+import { errorMessage } from "../lib/error/errorMsg";
+import { logoutAlert } from "../lib/alert/logoutAlert";
+import { autoLogoutAfter7Days } from "../lib/logout/logout";
+import { toast } from "sonner";
 
 const Layout = () => {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [settingsOpen, setSettingsOpen] = useState(false);
     const location = useLocation();
     const pathName = location.pathname;
-    const handleLogout = () => {
-        window.location.href = "/"
+
+    const [adminLogout] = useAdminLogoutMutation();
+
+    const handleLogout = async () => {
+
+        try {
+
+            const res = await logoutAlert();
+            if (res.isConfirmed) {
+                const res = await adminLogout({}).unwrap();
+
+                if (res) {
+                    localStorage.clear();
+                    console.log(res);
+                    window.location.href = "/";
+                    toast.success(res?.message);
+                }
+
+            }
+
+        } catch (err) {
+            return errorMessage(err);
+        }
+
     }
+
+    useEffect(() => {
+        const loggedOut = autoLogoutAfter7Days();
+
+        if (loggedOut) {
+            window.location.href = "/";
+        }
+    }, []);
 
     return (
         <div className="flex h-screen">
