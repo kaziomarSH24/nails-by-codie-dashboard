@@ -18,10 +18,7 @@ export const baseApi = createApi({
     }),
     tagTypes: [
         "Auth",
-        "User",
-        "School",
-        "SuperAdminAdmin",
-        "SuperAdminNotification",
+        "Course"
     ],
     endpoints: () => ({}),
 });

@@ -75,7 +75,7 @@ export const router = createBrowserRouter([
                 element: React.createElement(AddNewCourse)
             },
             {
-                path: "add-leason",
+                path: "add-leason/:id",
                 element: React.createElement(AddLessonForm)
             },
             {

@@ -1,10 +1,16 @@
 
 import { Bell } from 'lucide-react'
 import { useLocation } from 'react-router-dom'
+import { useProfileQuery } from '../../api/auth/authApi';
+import { Spinner } from '../ui/spinner';
 
 const Navbar = () => {
     const location = useLocation();
     const pathName = location.pathname;
+
+    const { data, isLoading } = useProfileQuery({});
+    // const profile: UserResponseType = data;
+    // console.log(profile.data.avatar)
 
     return (
         <div className=' flex items-center justify-between  w-full py-3 ' >
@@ -190,11 +196,17 @@ const Navbar = () => {
 
                 {/* User Avatar */}
                 <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-gray-300">
-                    <img
-                        src="/images/user/avatar.jpg"
-                        alt="User"
-                        className="w-full h-full object-cover"
-                    />
+                    {
+                        isLoading ? <>
+                            <div>
+                                <Spinner />
+                            </div>
+                        </> : <><img
+                            src={data?.data?.avatar}
+                            alt="User"
+                            className="w-full h-full object-cover"
+                        /></>
+                    }
                 </div>
             </div>
         </div>

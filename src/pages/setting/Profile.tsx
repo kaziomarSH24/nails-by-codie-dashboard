@@ -18,7 +18,6 @@ import {
 } from "../../api/auth/authApi";
 import { useForm } from "react-hook-form";
 import { errorMessage } from "../../lib/error/errorMsg";
-import { updateAlert } from "../../lib/alert/updateAlert";
 import { toast } from "sonner";
 import { Spinner } from "../../components/ui/spinner";
 

@@ -22,6 +22,8 @@ const Layout = () => {
     const location = useLocation();
     const pathName = location.pathname;
 
+    console.log(pathName)
+
     const [adminLogout] = useAdminLogoutMutation();
 
     const handleLogout = async () => {
@@ -180,7 +182,7 @@ const Layout = () => {
                                 className={`flex items-center gap-7 ${(pathName === "/dashboard/courses-management" || pathName === "/dashboard/course-create" || pathName === "/dashboard/add-leason")
                                     ? "bg-[#E9E9E9]" : ""}   px-4 py-3 rounded-[44px] transition`}
                             >
-                                {pathName === "/dashboard/courses-management" || pathName === "/dashboard/course-create" || pathName === "/dashboard/add-leason" ? (
+                                {pathName === "/dashboard/courses-management/" || pathName === "/dashboard/course-create" || pathName === "/dashboard/add-leason" ? (
                                     <span>
                                         {/* Active SVG */}
                                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
