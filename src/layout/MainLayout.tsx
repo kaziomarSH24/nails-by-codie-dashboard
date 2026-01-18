@@ -625,8 +625,8 @@ const Layout = () => {
 
             {/* Main Content */}
             <main
-                className={`flex-1 p-6 mt-24 transition-all min-h-screen pb-20  duration-300 ${sidebarOpen ? "ml-[350px]" : "ml-[100px]"
-                    } bg-gray-100 `}
+                className={`flex-1 p-6 mt-24 transition-all h-screen   pb-20      duration-300 ${sidebarOpen ? "ml-[350px]" : "ml-[100px]"
+                    }  `}
             >
                 <Outlet />
             </main>
