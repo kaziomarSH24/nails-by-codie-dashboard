@@ -7,6 +7,11 @@ import { useParams } from "react-router-dom";
 import Resumable from "resumablejs";
 import { useForm, Controller } from "react-hook-form";
 import { errorMessage } from "../../lib/error/errorMsg";
+import { useLessonUploadMutation } from "../../api/lesson-api/lessonApi";
+import { uploadAlert } from "../../lib/alert/uploadAlert";
+import { toast } from "sonner";
+import { Spinner } from "../../components/ui/spinner";
+
 
 type FormValues = {
     title: string;
@@ -26,6 +31,9 @@ function AddLessonForm() {
     const [videoSize, setVideoSize] = useState<number | undefined>(undefined);
     const [isUpload, setIsUpload] = useState<boolean>(false);
 
+
+
+
     const resumableRef = useRef<Resumable | null>(null);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -33,8 +41,7 @@ function AddLessonForm() {
     const {
         control,
         handleSubmit,
-        watch,
-        setValue,
+        reset,
         formState: { errors },
     } = useForm<FormValues>({
         defaultValues: {
@@ -44,7 +51,6 @@ function AddLessonForm() {
         },
     });
 
-    const watchedVideoLink = watch("video_url");
 
     // -------------------- ResumableJS Setup --------------------
     useEffect(() => {
@@ -111,47 +117,166 @@ function AddLessonForm() {
     // ----------------------- Calculate Video Size ---------------------------
     const sizeInMB = videoSize;
 
-    let minutes: number, seconds: number;
+    let minutes: number;
 
     if (sizeInMB !== undefined) {
         const sizeInBytes = sizeInMB * 1024 * 1024; // bytes
         const sizeInBits = sizeInBytes * 8; // bits
-        console.log(sizeInBits); // 573,308,416 bits
 
         const bitrateMbps = 5; // 5 Mbps
         const bitrateBps = bitrateMbps * 1024 * 1024; // bits per second
 
         const durationSeconds = sizeInBits / bitrateBps;
         minutes = Math.floor(durationSeconds / 60);
-        seconds = Math.floor(durationSeconds % 60);
+        // seconds = Math.floor(durationSeconds % 60);
 
-        console.log(`${minutes} min ${seconds} sec`);
+
+
+
+
+
     }
+
+
+    const [lessonUpload, { isLoading }] = useLessonUploadMutation();
+
+
+
+    // ======================= calculate video url duraction =================================
+
+    const [loadingDuration, setLoadingDuration] = useState(false);
+    const [durationError, setDurationError] = useState('');
+    const [videoDuration, setVideoDuration] = useState(''); // formatted (4:13)
+    const [videoMinutes, setVideoMinutes] = useState(0);   // total minutes (5)
+    const [timeLoading, setTimeLoading] = useState<boolean>(false);
+
+    const extractVideoId = (url) => {
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+        const match = url.match(regExp);
+        return match && match[2].length === 11 ? match[2] : null;
+    };
+
+    const parseDuration = (isoDuration) => {
+        const regex = /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/;
+        const matches = isoDuration.match(regex);
+        if (!matches) return "Unknown";
+
+        const hours = parseInt(matches[1] || 0);
+        const minutes = parseInt(matches[2] || 0);
+        const seconds = parseInt(matches[3] || 0);
+
+        if (hours > 0) {
+            return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        } else {
+            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+    };
+
+    const durationToMinutes = (isoDuration) => {
+        const regex = /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/;
+        const matches = isoDuration.match(regex);
+
+        if (!matches) return 0;
+
+        const hours = parseInt(matches[1] || 0);
+        const minutes = parseInt(matches[2] || 0);
+        const seconds = parseInt(matches[3] || 0);
+
+        return hours * 60 + minutes + Math.ceil(seconds / 60);
+    };
+
+
+    const calculateYouTubeDuration = async (url) => {
+        setLoadingDuration(true);
+        setDurationError('');
+        setVideoDuration('');
+        setVideoMinutes(0);
+
+        const videoId = extractVideoId(url);
+        if (!videoId) {
+            setDurationError('Invalid YouTube URL');
+            setLoadingDuration(false);
+            return;
+        }
+
+        try {
+            const apiKey = import.meta.env.VITE_YOUTUBE_API_KEY;
+            const apiUrl = `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=contentDetails&key=${apiKey}`;
+            const res = await fetch(apiUrl);
+            const data = await res.json();
+
+            if (!data.items?.length) {
+                setDurationError('Video not found or private');
+                return;
+            }
+
+            const isoDuration = data.items[0].contentDetails.duration;
+            setTimeLoading(true)
+
+            // UI format
+            const formatted = parseDuration(isoDuration);
+
+            // minutes convert
+            const totalMinutes = durationToMinutes(isoDuration);
+
+            setVideoDuration(formatted);
+            setVideoMinutes(totalMinutes);
+            setTimeLoading(false)
+
+        } catch (err) {
+            setDurationError(err.message);
+        } finally {
+            setLoadingDuration(false);
+        }
+    };
+
+
+
 
 
 
 
 
     // -------------------- Submit Handler --------------------
-    const onSubmit = (data: FormValues) => {
+    const onSubmit = async (data: FormValues) => {
         const formData = new FormData();
         if (videoOption == "upload") {
+            formData.append("video_type", "upload");
             formData.append("video_path", videoPath);
         } else {
             if (data?.video_url) {
                 formData.append("video_url", data.video_url);
+                formData.append("video_type", "url");
+                formData.append("duration", String(videoMinutes * 60));
             }
         }
-        formData.append("duration", `${minutes}:${seconds}`)
-        console.log("Form data:", data);
-        console.log("Uploaded video path:", videoPath);
+        formData.append("title", data.title);
+        formData.append("description", data.description);
+
         // ✅ Send data + videoPath to backend here
+
+        try {
+
+            const res = await uploadAlert();
+            if (res) {
+                const res = await lessonUpload({ formData, id }).unwrap()
+                if (res) {
+                    toast.success(res?.message);
+                    reset();
+                }
+            }
+
+        } catch (error) {
+            return errorMessage(error)
+
+        }
     };
 
-    console.log("video size is", videoSize?.toFixed(1), videoPath)
+
+
 
     return (
-        <>
+        <div className="  pb-20  " >
             <div className="max-w-7xl p-9 rounded-[14px] mx-auto bg-white shadow shadow-[#00000033]">
                 <h2 className="text-2xl font-bold text-gray-800 mb-6">
                     Add Lessons to Acrylic Nail Art Masterclass
@@ -281,9 +406,12 @@ function AddLessonForm() {
                                 render={({ field }) => (
                                     <Input
                                         {...field}
-
                                         placeholder="Enter video link"
                                         className={errors.video_url ? "border-red-500" : ""}
+                                        onBlur={(e) => {
+                                            field.onBlur();
+                                            calculateYouTubeDuration(e.target.value); // calculate on blur
+                                        }}
                                     />
                                 )}
                             />
@@ -291,19 +419,40 @@ function AddLessonForm() {
                         {errors.video_url && (
                             <p className="text-red-500 text-sm mt-1">{errors.video_url.message}</p>
                         )}
+
+                        {loadingDuration && <p className="text-sm">Calculating duration...</p>}
+
+                        {videoDuration && (
+                            <p className="text-green-600 text-sm">
+                                Duration: {videoDuration} ({videoMinutes} minutes)
+                            </p>
+                        )}
+
+                        {durationError && (
+                            <p className="text-red-500 text-sm">{durationError}</p>
+                        )}
                     </div>
 
                     {/* Submit */}
                     <div className="mt-12 flex justify-end">
-                        <Button type="submit">Add Lesson</Button>
+
+                        <Button
+                            type="submit"
+                            disabled={timeLoading}
+                            className="bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] w-full "
+                        >
+                            {isLoading ? <div className=" " >
+                                <Spinner />
+                            </div> : "Add Lesson"}
+                        </Button>
                     </div>
                 </form>
             </div>
 
             <div className="max-w-7xl mx-auto mt-8">
-                <CourseLesson />
+                <CourseLesson id={id} />
             </div>
-        </>
+        </div>
     );
 }
 

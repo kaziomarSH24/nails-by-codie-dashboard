@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     Plus,
     Search,
@@ -13,13 +13,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Badge } from "../../components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../../components/ui/dialog";
 import { Link } from "react-router-dom";
-import { useAllCourseQuery, useDeleteCourseMutation } from "../../api/course-api/courseApi";
+import { useAllCourseQuery, useCourseUpdateMutation, useDeleteCourseMutation } from "../../api/course-api/courseApi";
 import type { CourseType } from "../../lib/type/courseType";
 import { FaEdit, FaTrashAlt } from "react-icons/fa";
 import { errorMessage } from "../../lib/error/errorMsg";
 import { deleteAlert } from "../../lib/alert/deleteAlert";
 import { toast } from "sonner";
 import { Spinner } from "../../components/ui/spinner";
+import { Textarea } from "../../components/ui/textarea";
 
 const CourseTable = () => {
 
@@ -52,7 +53,6 @@ const CourseTable = () => {
     // -------------------ALL COURSE ---------------------
 
     const [search, setSearch] = useState("");
-    const [openLessonModal, setOpenLessonModal] = useState(false);
     const [openUpdateModal, setOpenUpdateModal] = useState(false);
 
     type Course = {
@@ -60,10 +60,12 @@ const CourseTable = () => {
         thumbnail: string;
         title: string;
         description: string;
-        status: string;
+        is_published: number;
     };
 
     const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+
+    console.log(selectedCourse)
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
@@ -72,8 +74,6 @@ const CourseTable = () => {
 
 
 
-
-    console.log("course data is ", data?.data);
 
     const courseData: CourseType[] = data?.data || [];
 
@@ -89,6 +89,75 @@ const CourseTable = () => {
 
     const handleNext = () => { if (currentPage < totalPages) setCurrentPage(currentPage + 1); };
     const handlePrev = () => { if (currentPage > 1) setCurrentPage(currentPage - 1); };
+
+
+
+
+
+    // =================== course update ======================
+    const [title, setTitle] = useState("");
+    const [description, setDescription] = useState("");
+    const [imageFile, setImageFile] = useState(null);
+
+    const [courseUpdate, { isLoading: updateLoading }] = useCourseUpdateMutation();
+
+    const [imagePreview, setImagePreview] = useState(
+        selectedCourse?.thumbnail || ""
+    );
+
+    useEffect(() => {
+        setImagePreview(selectedCourse?.thumbnail || "");
+    }, [selectedCourse]);
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setImagePreview(URL.createObjectURL(file));
+        }
+    };
+
+    useEffect(() => {
+        if (selectedCourse) {
+            setTitle(selectedCourse.title || "");
+            setDescription(selectedCourse.description || "");
+            setImagePreview(selectedCourse.thumbnail || "");
+            setImageFile(null);
+        }
+    }, [selectedCourse]);
+
+
+    // const handleUpdateCourse = async () => {
+    //     if (!selectedCourse?.id) return;
+
+    //     const formData = new FormData();
+    //     formData.append("title", title);
+    //     formData.append("description", description);
+
+    //     if (imageFile) {
+    //         formData.append("image", imageFile);
+    //     }
+
+    //     try {
+    //         const alertResult = await courseUpdateAlert();
+
+    //         if (alertResult.isConfirmed) {
+    //             const response = await courseUpdate({
+    //                 id: selectedCourse.id,
+    //                 body: formData,
+    //             }).unwrap();
+
+    //             toast.success(response?.message || "Course updated successfully");
+    //             setOpenUpdateModal(false);
+    //         }
+    //     } catch (error) {
+    //         errorMessage(error);
+    //     }
+    // };
+
+
+
+
+
 
 
     if (isLoading) {
@@ -174,7 +243,7 @@ const CourseTable = () => {
                                         </Link>
                                         <Button
                                             className="border border-[#989898] px-2 py-1 bg-white"
-                                        // onClick={() => { setSelectedCourse(course); setOpenUpdateModal(true); }}
+                                            onClick={() => { setSelectedCourse(course); setOpenUpdateModal(true); }}
                                         >
                                             <FaEdit color="#B9B9B9" />
                                         </Button>
@@ -232,20 +301,54 @@ const CourseTable = () => {
 
             {/* Update Course Modal */}
             <Dialog open={openUpdateModal} onOpenChange={setOpenUpdateModal}>
-                <DialogContent>
+                <DialogContent className="max-w-lg">
                     <DialogHeader>
                         <DialogTitle>
                             Update Course {selectedCourse ? `(${selectedCourse.title})` : ""}
                         </DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-3 mt-3">
-                        <Input defaultValue={selectedCourse?.title || ""} placeholder="Course Title" />
-                        <Input defaultValue={selectedCourse?.description || ""} placeholder="Description" />
-                        <Input type="file" />
+
+                    <div className="space-y-4 mt-4">
+                        {/* Title */}
+                        <Input
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            placeholder="Course Title"
+                        />
+
+                        {/* Description */}
+                        <Textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            placeholder="Description"
+                            rows={4}
+                        />
+
+                        {/* Image Preview */}
+                        {imagePreview && (
+                            <img
+                                src={imagePreview}
+                                alt="Course"
+                                className="w-full h-40 object-cover rounded-md border"
+                            />
+                        )}
+
+                        {/* Image Input */}
+                        <Input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageChange}
+                        />
                     </div>
+
                     <DialogFooter>
-                        <Button className="bg-yellow-600 hover:bg-yellow-700" onClick={() => setOpenUpdateModal(false)}>
-                            Update
+                        <Button
+                            className="bg-yellow-600 hover:bg-yellow-700"
+                        // onClick={handleUpdateCourse}
+                        >
+                            {
+                                updateLoading ? <> <div className=" flex justify-center " > <Spinner /> </div> </> : <>Update</>
+                            }
                         </Button>
                     </DialogFooter>
                 </DialogContent>

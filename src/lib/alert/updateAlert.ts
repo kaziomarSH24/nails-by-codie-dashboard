@@ -1,7 +1,7 @@
-import Swal from "sweetalert2"
+import Swal from 'sweetalert2'
 
 
-export const updateAlert = async () => {
+export const courseUpdateAlert = async () => {
     return (
         Swal.fire({
             title: "Are you sure?",
@@ -10,7 +10,7 @@ export const updateAlert = async () => {
             showCancelButton: true,
             confirmButtonColor: "#3085d6",
             cancelButtonColor: "#d33",
-            confirmButtonText: "Yes, update!"
+            confirmButtonText: "Yes, I want logout!"
         })
     )
 }

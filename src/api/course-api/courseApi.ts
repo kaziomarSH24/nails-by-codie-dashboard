@@ -29,6 +29,29 @@ export const courseApi = baseApi.injectEndpoints({
             invalidatesTags: ["Course"]
         }),
 
+        publishCourse: builder.mutation({
+            query: (courseId) => ({
+                url: `/admin/courses/${courseId}/status?is_published=1`,
+                method: "PUT"
+            }),
+            invalidatesTags: ["Course"]
+        }),
+        unPublishCourse: builder.mutation({
+            query: (courseId) => ({
+                url: `/admin/courses/${courseId}/status?is_published=0`,
+                method: "PUT"
+            }),
+            invalidatesTags: ["Course"]
+        }),
+        courseUpdate: builder.mutation({
+            query: ({ formData, id }) => ({
+                url: `/admin/courses/${id}`,
+                method: "POST",
+                body: formData
+            }),
+            invalidatesTags: ["Course"]
+        })
+
 
 
 
@@ -39,6 +62,9 @@ export const {
 
     useUploadCourseMutation,
     useAllCourseQuery,
-    useDeleteCourseMutation
+    useDeleteCourseMutation,
+    usePublishCourseMutation,
+    useUnPublishCourseMutation,
+    useCourseUpdateMutation
 
 } = courseApi
