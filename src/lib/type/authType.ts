@@ -24,7 +24,7 @@ type User = {
     email: string;
     email_verified_at: string | null;
     phone: string | null;
-    avatar: string | null;
+    avatar: string | undefined;
     dob: string | null;
     address: string | null;
     status: string;
@@ -100,7 +100,7 @@ export type UserDetails = {
 };
 
 // API response type
-export interface UserResponseType  {
+export interface UserResponseType {
     ok: boolean;
     message: string;
     data: User;
