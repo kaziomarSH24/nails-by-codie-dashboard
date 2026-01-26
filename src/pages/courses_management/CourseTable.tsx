@@ -1,26 +1,28 @@
-"use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
     Plus,
     Search,
     ChevronLeft,
     ChevronRight,
 } from "lucide-react";
-import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent } from "../../components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { Badge } from "../../components/ui/badge";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../../components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../../components/ui/dialog";
 import { Link } from "react-router-dom";
-import { useAllCourseQuery, useCourseUpdateMutation, useDeleteCourseMutation } from "../../api/course-api/courseApi";
+import { useAllCourseQuery, useDeleteCourseMutation } from "../../api/course-api/courseApi";
 import type { CourseType } from "../../lib/type/courseType";
 import { FaEdit, FaTrashAlt } from "react-icons/fa";
 import { errorMessage } from "../../lib/error/errorMsg";
 import { deleteAlert } from "../../lib/alert/deleteAlert";
 import { toast } from "sonner";
 import { Spinner } from "../../components/ui/spinner";
-import { Textarea } from "../../components/ui/textarea";
+
+import CourseUpdate from "./CourseUpdate";
+import { Label } from "recharts";
+import type { CourseLessonType, Lesson } from "../../lib/type/lessonType";
+import { useGetLessonByCourseIdQuery } from "../../api/lesson-api/lessonApi";
 
 const CourseTable = () => {
 
@@ -90,69 +92,27 @@ const CourseTable = () => {
     const handleNext = () => { if (currentPage < totalPages) setCurrentPage(currentPage + 1); };
     const handlePrev = () => { if (currentPage > 1) setCurrentPage(currentPage - 1); };
 
+    // ====================== course details ============================
+
+    const [courseDetailsModl, setCourseDetailsModal] = useState<boolean>(false);
+    const [courseId, setCourseId] = useState<number | undefined>(undefined);
+    console.log("corse details is", courseId);
+
+    const handleCourseDetails = async (id: number) => {
+        setCourseDetailsModal(true)
+        setCourseId(id);
+    }
+
+    const { data: courseDetails, isLoading: courseDetailsLoading } = useGetLessonByCourseIdQuery(courseId);
+
+
+    const courseTitle: CourseLessonType = courseDetails?.data;
+    const lessonData: Lesson[] = courseDetails?.data?.lessons || [];
 
 
 
 
-    // =================== course update ======================
-    const [title, setTitle] = useState("");
-    const [description, setDescription] = useState("");
-    const [imageFile, setImageFile] = useState(null);
 
-    const [courseUpdate, { isLoading: updateLoading }] = useCourseUpdateMutation();
-
-    const [imagePreview, setImagePreview] = useState(
-        selectedCourse?.thumbnail || ""
-    );
-
-    useEffect(() => {
-        setImagePreview(selectedCourse?.thumbnail || "");
-    }, [selectedCourse]);
-
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-        const file = e.target.files?.[0];
-        if (file) {
-            setImagePreview(URL.createObjectURL(file));
-        }
-    };
-
-    useEffect(() => {
-        if (selectedCourse) {
-            setTitle(selectedCourse.title || "");
-            setDescription(selectedCourse.description || "");
-            setImagePreview(selectedCourse.thumbnail || "");
-            setImageFile(null);
-        }
-    }, [selectedCourse]);
-
-
-    // const handleUpdateCourse = async () => {
-    //     if (!selectedCourse?.id) return;
-
-    //     const formData = new FormData();
-    //     formData.append("title", title);
-    //     formData.append("description", description);
-
-    //     if (imageFile) {
-    //         formData.append("image", imageFile);
-    //     }
-
-    //     try {
-    //         const alertResult = await courseUpdateAlert();
-
-    //         if (alertResult.isConfirmed) {
-    //             const response = await courseUpdate({
-    //                 id: selectedCourse.id,
-    //                 body: formData,
-    //             }).unwrap();
-
-    //             toast.success(response?.message || "Course updated successfully");
-    //             setOpenUpdateModal(false);
-    //         }
-    //     } catch (error) {
-    //         errorMessage(error);
-    //     }
-    // };
 
 
 
@@ -256,7 +216,7 @@ const CourseTable = () => {
                                                 </> : <FaTrashAlt color="#B9B9B9" />
                                             }
                                         </Button>
-                                        <Button className="border border-[#989898] px-2 py-1 bg-white">
+                                        <Button onClick={() => { handleCourseDetails(course.id) }} className="border border-[#989898] px-2 py-1 bg-white">
                                             <svg width="22" height="15" viewBox="0 0 22 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                 <path d="M11 4.5C10.2044 4.5 9.44129 4.81607 8.87868 5.37868C8.31607 5.94129 8 6.70435 8 7.5C8 8.29565 8.31607 9.05871 8.87868 9.62132C9.44129 10.1839 10.2044 10.5 11 10.5C11.7956 10.5 12.5587 10.1839 13.1213 9.62132C13.6839 9.05871 14 8.29565 14 7.5C14 6.70435 13.6839 5.94129 13.1213 5.37868C12.5587 4.81607 11.7956 4.5 11 4.5ZM11 12.5C9.67392 12.5 8.40215 11.9732 7.46447 11.0355C6.52678 10.0979 6 8.82608 6 7.5C6 6.17392 6.52678 4.90215 7.46447 3.96447C8.40215 3.02678 9.67392 2.5 11 2.5C12.3261 2.5 13.5979 3.02678 14.5355 3.96447C15.4732 4.90215 16 6.17392 16 7.5C16 8.82608 15.4732 10.0979 14.5355 11.0355C13.5979 11.9732 12.3261 12.5 11 12.5ZM11 0C6 0 1.73 3.11 0 7.5C1.73 11.89 6 15 11 15C16 15 20.27 11.89 22 7.5C20.27 3.11 16 0 11 0Z" fill="#B9B9B9" />
                                             </svg>
@@ -301,58 +261,76 @@ const CourseTable = () => {
 
             {/* Update Course Modal */}
             <Dialog open={openUpdateModal} onOpenChange={setOpenUpdateModal}>
-                <DialogContent className="max-w-lg">
+                <CourseUpdate selectedCourse={selectedCourse} setOpenUpdateModal={setOpenUpdateModal} />
+            </Dialog>
+
+            {/* course details modal  */}
+            <Dialog open={courseDetailsModl} onOpenChange={setCourseDetailsModal} >
+
+                <DialogContent className="max-w-3xl  ">
                     <DialogHeader>
-                        <DialogTitle>
-                            Update Course {selectedCourse ? `(${selectedCourse.title})` : ""}
-                        </DialogTitle>
+                        <DialogTitle>{courseTitle?.title} Course Lessons</DialogTitle>
+                        <div>
+                            <h1>Instructor Name : {courseTitle?.instructor}</h1>
+                            <h1>Price : {courseTitle?.price}</h1>
+                            <h1>Reward Points : {courseTitle?.reward_points}</h1>
+                            <h1>Course Duraction: {courseTitle?.duration}</h1>
+                            <h1>Total Lesson : {courseTitle?.total_lessons}</h1>
+                        </div>
+                        <DialogDescription>
+                            Anyone who has this link will be able to view this.
+                        </DialogDescription>
                     </DialogHeader>
+                    <div className="flex items-center gap-2 ">
+                        <div>
+                            {/* =================== HEADER =================== */}
 
-                    <div className="space-y-4 mt-4">
-                        {/* Title */}
-                        <Input
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                            placeholder="Course Title"
-                        />
 
-                        {/* Description */}
-                        <Textarea
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            placeholder="Description"
-                            rows={4}
-                        />
+                            {/* =================== LESSON LIST =================== */}
+                            {lessonData.map((item, index) => (
+                                <div key={item.id} className="mt-6">
+                                    <div className=" max-w-3xl   px-6 py-3 rounded-[38px] border border-[#989898] ">
+                                        {/* LEFT */}
+                                        <div className="flex items-center gap-x-6  w-full  ">
+                                            {/* ▶ Play icon */}
+                                            <div
+                                                className="cursor-pointer"
+                                            // onClick={() => handlePlay(item.video_url)}
+                                            >
+                                                ▶
+                                            </div>
 
-                        {/* Image Preview */}
-                        {imagePreview && (
-                            <img
-                                src={imagePreview}
-                                alt="Course"
-                                className="w-full h-40 object-cover rounded-md border"
-                            />
-                        )}
+                                            <div>
+                                                <h1 className="font-medium">
+                                                    {index + 1}. {item.title}
+                                                </h1>
+                                                <p className="text-sm text-gray-600">
+                                                    {item.description}
+                                                </p>
+                                            </div>
+                                        </div>
 
-                        {/* Image Input */}
-                        <Input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleImageChange}
-                        />
+
+                                    </div>
+                                </div>
+                            ))}
+
+
+
+                        </div>
                     </div>
-
-                    <DialogFooter>
-                        <Button
-                            className="bg-yellow-600 hover:bg-yellow-700"
-                        // onClick={handleUpdateCourse}
-                        >
-                            {
-                                updateLoading ? <> <div className=" flex justify-center " > <Spinner /> </div> </> : <>Update</>
-                            }
-                        </Button>
+                    <DialogFooter className="sm:justify-start">
+                        <DialogClose asChild>
+                            <div className=" flex justify-end " >
+                                <Button type="button" className="bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] px-10 flex justify-end   "  >
+                                    Close
+                                </Button>
+                            </div>
+                        </DialogClose>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
         </div>
     );
 };

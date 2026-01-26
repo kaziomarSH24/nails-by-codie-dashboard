@@ -24,6 +24,7 @@ export interface CourseLessonType {
     is_published: number; // 0 | 1
     duration: string;
     created_at: string;
+    total_lessons: number;
     updated_at: string;
     lessons: Lesson[];
 }

@@ -132,9 +132,6 @@ function AddLessonForm() {
 
 
 
-
-
-
     }
 
 
@@ -150,13 +147,13 @@ function AddLessonForm() {
     const [videoMinutes, setVideoMinutes] = useState(0);   // total minutes (5)
     const [timeLoading, setTimeLoading] = useState<boolean>(false);
 
-    const extractVideoId = (url) => {
+    const extractVideoId = (url: string) => {
         const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
         const match = url.match(regExp);
         return match && match[2].length === 11 ? match[2] : null;
     };
 
-    const parseDuration = (isoDuration) => {
+    const parseDuration = (isoDuration: string) => {
         const regex = /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/;
         const matches = isoDuration.match(regex);
         if (!matches) return "Unknown";
@@ -172,7 +169,7 @@ function AddLessonForm() {
         }
     };
 
-    const durationToMinutes = (isoDuration) => {
+    const durationToMinutes = (isoDuration: string) => {
         const regex = /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/;
         const matches = isoDuration.match(regex);
 
@@ -186,7 +183,7 @@ function AddLessonForm() {
     };
 
 
-    const calculateYouTubeDuration = async (url) => {
+    const calculateYouTubeDuration = async (url: string) => {
         setLoadingDuration(true);
         setDurationError('');
         setVideoDuration('');
@@ -243,6 +240,7 @@ function AddLessonForm() {
         if (videoOption == "upload") {
             formData.append("video_type", "upload");
             formData.append("video_path", videoPath);
+            formData.append("duration", String(minutes));
         } else {
             if (data?.video_url) {
                 formData.append("video_url", data.video_url);
@@ -263,6 +261,7 @@ function AddLessonForm() {
                 if (res) {
                     toast.success(res?.message);
                     reset();
+                    setIsUpload(false)
                 }
             }
 
