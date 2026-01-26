@@ -6,7 +6,7 @@ const RewardSetting = () => {
                 <h1 className=' font-medium text-xl text-[#3A3734]  ' >Reward Settings</h1>
 
 
-                <div className=' flex gap-x-5 ' >
+                <div className=' flex gap-x-5 items-center ' >
                     {/* box 1  */}
                     <div className='p-2.5 border border-[#B9B9B9] rounded-[7px] mt-4 w-[300px]  ' >
                         <h1 className=' text-sm font-medium ' >Points per course/Product Purchase </h1>
@@ -25,6 +25,9 @@ const RewardSetting = () => {
                             <input type="text" placeholder='100' name="" className=' w-20 py-2 px-3 border border-[#989898] hover:outline-none  focus:outline-0 rounded-[6px]   ' id="" />
                             <p className=' text-xs ' >Point</p>
                         </div>
+                    </div>
+                    <div>
+                        <button className="py-2 rounded-lg text-white font-bold bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] px-10 " >Readme</button>
                     </div>
                 </div>
                 <div className=' mt-4 flex justify-end ' >

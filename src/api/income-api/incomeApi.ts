@@ -8,6 +8,13 @@ export const incomeApi = baseApi.injectEndpoints({
                 url: `/admin/income-report`,
                 method: "GET"
             })
+        }),
+
+        incomeDetails: builder.query({
+            query: (viewId) => ({
+                url: `/admin/income-report/${viewId}`,
+                method: "GET"
+            })
         })
 
 
@@ -16,4 +23,4 @@ export const incomeApi = baseApi.injectEndpoints({
     }),
 })
 
-export const { useIncomeReportQuery } = incomeApi
+export const { useIncomeReportQuery, useIncomeDetailsQuery } = incomeApi
