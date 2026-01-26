@@ -3,28 +3,32 @@
 import { useState } from "react";
 import { Search } from "lucide-react";
 import { Dialog, DialogContent } from "../../components/ui/dialog";
+import { useAllProductQuery, useSynceProductMutation } from "../../api/product-api/productApi";
+import type { ProductType } from "../../lib/type/productType";
+import { errorMessage } from "../../lib/error/errorMsg";
+import { toast } from "sonner";
+import ProductSkeleton from "../../components/skeleton/ProductSkeleton";
 
 
 const ProductTable = () => {
     const [search, setSearch] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
-    const [selectedProduct, setSelectedProduct] = useState<Product | undefined>(undefined);
+    const [selectedProduct, setSelectedProduct] = useState<ProductType | undefined>(undefined);
     const [open, setOpen] = useState(false);
 
-    const itemsPerPage = 5;
+    const itemsPerPage = 15;
 
-    const products = [
-        { name: "Wireless Headphones", stock: 25, price: "$120", status: "Synced", date: "2025-10-20", description: "Noise-cancelling Bluetooth headphones with 20hr battery life." },
-        { name: "Smart Watch", stock: 10, price: "$85", status: "Not Synced", date: "2025-10-19", description: "Fitness smart watch with heart rate and sleep tracking." },
-        { name: "Bluetooth Speaker", stock: 50, price: "$60", status: "Synced", date: "2025-10-18", description: "Portable speaker with waterproof design and deep bass." },
-        { name: "Laptop Bag", stock: 15, price: "$40", status: "Not Synced", date: "2025-10-17", description: "Durable laptop bag with anti-theft zippers and USB charging port." },
-        { name: "Gaming Mouse", stock: 30, price: "$35", status: "Synced", date: "2025-10-16", description: "RGB gaming mouse with adjustable DPI and ergonomic grip." },
-        { name: "USB-C Cable", stock: 60, price: "$10", status: "Not Synced", date: "2025-10-15", description: "Durable braided USB-C to USB-A fast charging cable." },
-    ];
+    const { data, isLoading, refetch } = useAllProductQuery({});
+
+    const products: ProductType[] = data?.data || [];
+
+
+
+
 
     // Filtered data
     const filteredProducts = products.filter((product) =>
-        product.name.toLowerCase().includes(search.toLowerCase())
+        product.title.toLowerCase().includes(search.toLowerCase())
     );
 
     // Pagination
@@ -33,29 +37,42 @@ const ProductTable = () => {
     const currentItems = filteredProducts.slice(startIndex, startIndex + itemsPerPage);
 
     // Handle View Click
-    interface Product {
-        name: string;
-        stock: number;
-        price: string;
-        status: string;
-        date: string;
-        description: string;
-    }
 
 
-    const handleView = (product: Product) => {
+    const handleView = (product: ProductType) => {
         setSelectedProduct(product);
         setOpen(true);
     };
 
+    console.log("single product is ", selectedProduct)
+
+    // sync product 
+
+    const [synceProduct] = useSynceProductMutation();
 
 
-    // Handle Sync Toggle
-    // const handleSync = (index) => {
-    //     const updated = [...products];
-    //     updated[index].status =
-    //         updated[index].status === "Synced" ? "Not Synced" : "Synced";
-    // };
+    const handleSyncProduct = async () => {
+        try {
+            const res = await synceProduct({});
+            if (res) {
+                toast.success(res?.data?.message)
+                refetch();
+            }
+
+        } catch (error) {
+            return errorMessage(error)
+        }
+    }
+
+    if (isLoading) {
+        return (
+            <div>
+                <ProductSkeleton />
+            </div>
+        )
+    }
+
+
 
     return (
         <div className=" py-8 px-7 shadow shadow-[#00000033] rounded-2xl bg-white ">
@@ -97,9 +114,9 @@ const ProductTable = () => {
                             {currentItems.map((product, index) => (
                                 <tr key={index} className="border-t text-sm font-medium hover:bg-gray-50 transition-colors duration-200">
                                     <td className="px-4 py-3 flex items-center gap-x-1.5  ">
-                                        <img src="/images/product/product-1.jpg" className=" w-9 h-9 rounded-full" />
-                                        {product.name}</td>
-                                    <td className="px-4 py-3">{product.stock}</td>
+                                        <img src={product?.image_url} className=" w-12 h-12 rounded-full" />
+                                        {product.title}</td>
+                                    <td className="px-4 py-3">{product.stock_quantity}</td>
                                     <td className="px-4 py-3">{product.price}</td>
                                     <td className="px-4 py-3">
                                         <span
@@ -111,7 +128,7 @@ const ProductTable = () => {
                                             {product.status}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-3">{product.date}</td>
+                                    <td className="px-4 py-3">{new Date(product.created_at).toLocaleDateString()}</td>
                                     <td className="px-4 py-3 text-center flex justify-center gap-3">
                                         <button
                                             className=" border border-[#989898] rounded-[6px] py-1.5 px-2 "
@@ -123,6 +140,7 @@ const ProductTable = () => {
 
                                         </button>
                                         <button
+                                            onClick={handleSyncProduct}
                                             className=" border border-[#989898] rounded-[6px] py-1.5 px-2 "
 
                                         >
@@ -140,12 +158,8 @@ const ProductTable = () => {
                 </div>
 
                 {/* Pagination */}
-                <div className="flex justify-between items-center mt-6 text-sm text-gray-600">
-                    <p>
-                        Showing {startIndex + 1}–
-                        {Math.min(startIndex + itemsPerPage, filteredProducts.length)} of{" "}
-                        {filteredProducts.length} products
-                    </p>
+                <div className="flex justify-end items-center mt-6 text-sm text-gray-600">
+
 
                     <div className="flex items-center gap-2">
                         <button
@@ -194,19 +208,19 @@ const ProductTable = () => {
                     {selectedProduct && (
                         <div className=" flex items-start  gap-x-7 " >
                             <div className=" w-[50%] " >
-                                <img src="/images/product/product-1.jpg" className=" w-[304px] h-[249px] rounded-[9px] " alt="" />
+                                <img src={selectedProduct?.image_url} className=" w-[304px] h-[249px] rounded-[9px] " alt="" />
                             </div>
                             <div className="space-y-4 w-[50%] ">
                                 {/* product name  */}
                                 <div>
                                     <p className=" text-sm " >Name</p>
-                                    <p className=" text-[16px] font-medium mt-1.5 " >{selectedProduct.name}</p>
+                                    <p className=" text-[16px] font-medium mt-1.5 " >{selectedProduct.title}</p>
                                 </div>
                                 <div>
 
                                     <p className="text-sm " >Price</p>
                                     <p className=" mt-1.5 text-transparent bg-gradient-to-r from-[#F2DA87] via-[#91741A] to-[#F2DA87] bg-clip-text font-medium text-xl " >
-                                        ${selectedProduct.stock}
+                                        ${selectedProduct.stock_quantity}
                                     </p>
                                 </div>
 
@@ -215,17 +229,17 @@ const ProductTable = () => {
                                     <p className=" text-[16px] font-medium mt-1.5 " >8 in stock</p>
                                 </div>
 
-                                <div>
+                                {/* <div>
                                     <p className="text-sm " >Description</p>
                                     <p className="  text-[#989898] mt-1.5 text-sm  " >{selectedProduct.description}</p>
-                                </div>
+                                </div> */}
 
 
 
 
                                 <div>
                                     <p className=" text-sm " >Last Synced</p>
-                                    <p><span className="font-medium text-[16px] "></span> October 18, 2025 at 02:45 PM</p>
+                                    <p><span className="font-medium text-[16px] "></span>  {new Date(selectedProduct?.updated_at).toLocaleTimeString()} </p>
                                 </div>
                             </div>
                         </div>
@@ -233,7 +247,7 @@ const ProductTable = () => {
                     )}
                     <div className=" border border-[#B9B9B9] mt-6 " ></div>
                     <div className=" flex justify-end " >
-                        <button className=" py-1.5 px-3.5 rounded-[42px] bg-gradient-to-r from-[#F2DA87] via-[#91741A] to-[#F2DA87] text-[#1E1E1E] " >Edit Product</button>
+                        {/* <button className=" py-1.5 px-3.5 rounded-[42px] bg-gradient-to-r from-[#F2DA87] via-[#91741A] to-[#F2DA87] text-[#1E1E1E] " >Edit Product</button> */}
                     </div>
                 </DialogContent>
             </Dialog>

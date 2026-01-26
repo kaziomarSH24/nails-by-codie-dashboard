@@ -1,5 +1,5 @@
 import React from 'react'
-import StockOverview from './StockOverview'
+import StockOverview from './StockStats'
 import StockTable from './StockTable'
 
 const StockManagement: React.FC = () => {

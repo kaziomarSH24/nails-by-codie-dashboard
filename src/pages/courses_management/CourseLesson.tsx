@@ -15,6 +15,7 @@ import type { CourseLessonType, Lesson } from "../../lib/type/lessonType";
 import { usePublishCourseMutation, useUnPublishCourseMutation } from "../../api/course-api/courseApi";
 // import { updateAlert } from "../../lib/alert/updateAlert";
 import LessonUpdate from "./LessonUpdate";
+import { courseUpdateAlert } from "../../lib/alert/updateAlert";
 // import { VideoPlayer, VideoPlayerContent, VideoPlayerControlBar, VideoPlayerMuteButton, VideoPlayerPlayButton, VideoPlayerSeekBackwardButton, VideoPlayerSeekForwardButton, VideoPlayerTimeDisplay, VideoPlayerTimeRange, VideoPlayerVolumeRange } from "../../components/kibo-ui/video-player";
 // import { ReactPlayer } from 'react-player';
 
@@ -67,7 +68,7 @@ const CourseLesson = ({ id }: { id: string | undefined }) => {
 
     const courseStatusUpdate = async () => {
         try {
-            const res = await updateAlert();
+            const res = await courseUpdateAlert();
 
             if (res.isConfirmed) {
                 const res = await publishCourse(courseId).unwrap();
@@ -89,7 +90,7 @@ const CourseLesson = ({ id }: { id: string | undefined }) => {
 
     const courseUnPublish = async () => {
         try {
-            const res = await updateAlert();
+            const res = await courseUpdateAlert();
 
             if (res.isConfirmed) {
                 const res = await unPublishCourse(courseId).unwrap();

@@ -1,6 +1,4 @@
-import Swal from "sweetalert2"
-
-
+import Swal from "sweetalert2";
 
 export const courseUpdateAlert = async () => {
     return (
@@ -13,5 +11,5 @@ export const courseUpdateAlert = async () => {
             cancelButtonColor: "#d33",
             confirmButtonText: "Yes, update it!"
         })
-    )
+    );
 }

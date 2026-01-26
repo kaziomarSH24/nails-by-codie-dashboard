@@ -19,7 +19,8 @@ export const baseApi = createApi({
     tagTypes: [
         "Auth",
         "Course",
-        "Lesson"
+        "Lesson",
+        "Stock"
     ],
     endpoints: () => ({}),
 });
