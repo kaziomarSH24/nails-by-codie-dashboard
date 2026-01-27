@@ -240,7 +240,7 @@ function AddLessonForm() {
         if (videoOption == "upload") {
             formData.append("video_type", "upload");
             formData.append("video_path", videoPath);
-            formData.append("duration", String(minutes));
+            formData.append("duration", String(minutes * 60 * 60));
         } else {
             if (data?.video_url) {
                 formData.append("video_url", data.video_url);
