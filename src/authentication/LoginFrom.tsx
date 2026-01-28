@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { IoEyeOff, IoEye } from "react-icons/io5";
 import { Link, useNavigate } from "react-router-dom";
 import { useLoginMutation } from "../api/auth/authApi";
@@ -43,6 +43,14 @@ const LoginFrom = () => {
             console.log(err);
         }
     };
+
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        console.log(token)
+        if (token) {
+            window.location.href = "/dashboard"
+        }
+    }, [])
 
     return (
         <div className="max-w-2xl mx-auto rounded-3xl shadow shadow-[#00000033] mt-28 pt-20 pb-36">

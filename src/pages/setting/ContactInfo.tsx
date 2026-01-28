@@ -1,48 +1,88 @@
-import { FaWhatsapp } from 'react-icons/fa'
-import { Dialog, DialogClose, DialogContent, DialogTrigger } from '../../components/ui/dialog'
+import { FaEdit, FaTrash, FaWhatsapp } from 'react-icons/fa'
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTrigger } from '../../components/ui/dialog'
 import ContactFrom from './ContactFrom'
-import { useAllContactInfoQuery } from '../../api/contact-api/contactApi'
+import { useAllContactInfoQuery, useContactDeleteMutation } from '../../api/contact-api/contactApi'
+import type { SocialLink } from '../../lib/type/contactType'
+import { DialogTitle } from '@radix-ui/react-dialog'
+import { useState } from 'react'
+import { errorMessage } from '../../lib/error/errorMsg'
+import { deleteAlert } from '../../lib/alert/deleteAlert'
+import { toast } from 'sonner'
+import { Spinner } from '../../components/ui/spinner'
+import ContactUpdate, { type ContactData } from './ContactUpdate'
+import { Link } from 'react-router-dom'
 
 const ContactInfo = () => {
   const { data } = useAllContactInfoQuery({});
-  console.log(data?.data);
+  const contactData: SocialLink[] = data?.data || [];
+
+  const [updateModal, setUpdateModal] = useState<boolean>(false);
+  const [createModal, setCreateModal] = useState<boolean>(false);
+  const [sigleContact, setContactData] = useState<ContactData>();
+  const [id, setId] = useState<string>();
+
+
+  const [contactDelete, { isLoading }] = useContactDeleteMutation();
+
+  const handleContactDelete = async (id: string) => {
+    setId(id);
+    try {
+      const res = await deleteAlert();
+      if (res.isConfirmed) {
+        const res = await contactDelete(id).unwrap();
+        if (res) {
+          console.log(res);
+          toast.success(res?.message)
+        }
+      }
+    } catch (error) {
+      return errorMessage(error)
+    }
+  }
+
+
   return (
     <div>
-      <div className=' flex items-center justify-center ' >
-        {/* Whatsapp */}
-        {/* <span>
-          <svg width="213" height="185" viewBox="0 0 213 185" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <g filter="url(#filter0_d_85_2176)">
-              <rect x="20.4896" y="20.4893" width="172" height="144" rx="14.1299" fill="white" />
-              <path d="M122.94 47.9464C120.8 45.786 118.252 44.073 115.444 42.9072C112.636 41.7415 109.623 41.1463 106.583 41.1564C93.8429 41.1564 83.4596 51.5397 83.4596 64.2797C83.4596 68.363 84.5329 72.3297 86.5396 75.8297L83.2729 87.823L95.5229 84.603C98.9063 86.4464 102.71 87.4264 106.583 87.4264C119.323 87.4264 129.706 77.043 129.706 64.303C129.706 58.1197 127.303 52.3097 122.94 47.9464ZM106.583 83.5064C103.13 83.5064 99.7463 82.573 96.7829 80.823L96.0829 80.403L88.8029 82.3164L90.7396 75.223L90.2729 74.4997C88.3539 71.4362 87.3351 67.8947 87.3329 64.2797C87.3329 53.6864 95.9663 45.053 106.56 45.053C111.693 45.053 116.523 47.0597 120.14 50.6997C121.931 52.4821 123.35 54.6023 124.315 56.9375C125.281 59.2726 125.773 61.7762 125.763 64.303C125.81 74.8964 117.176 83.5064 106.583 83.5064ZM117.13 69.133C116.546 68.853 113.7 67.453 113.186 67.243C112.65 67.0564 112.276 66.963 111.88 67.523C111.483 68.1064 110.386 69.413 110.06 69.7864C109.733 70.183 109.383 70.2297 108.8 69.9264C108.216 69.6464 106.35 69.0164 104.156 67.0564C102.43 65.5164 101.286 63.6264 100.936 63.043C100.61 62.4597 100.89 62.1564 101.193 61.853C101.45 61.5964 101.776 61.1764 102.056 60.8497C102.336 60.523 102.453 60.2664 102.64 59.893C102.826 59.4964 102.733 59.1697 102.593 58.8897C102.453 58.6097 101.286 55.763 100.82 54.5964C100.353 53.4764 99.8629 53.6164 99.5129 53.593H98.3929C97.9963 53.593 97.3896 53.733 96.8529 54.3164C96.3396 54.8997 94.8463 56.2997 94.8463 59.1464C94.8463 61.993 96.9229 64.7464 97.2029 65.1197C97.4829 65.5164 101.286 71.3497 107.073 73.8464C108.45 74.453 109.523 74.803 110.363 75.0597C111.74 75.503 113 75.433 114.003 75.293C115.123 75.1297 117.433 73.893 117.9 72.5397C118.39 71.1864 118.39 70.043 118.226 69.7864C118.063 69.5297 117.713 69.413 117.13 69.133Z" fill="#3A3734" />
-              <path d="M70.2181 131.63C69.6117 131.63 69.2777 131.331 69.0931 130.654L66.1488 120.151C66.0873 119.914 66.0609 119.729 66.0609 119.554C66.0609 119.018 66.4476 118.666 67.0277 118.666C67.5463 118.666 67.8627 118.947 67.9857 119.483L70.2709 128.738H70.3412L72.8197 119.659C73.0043 118.956 73.3383 118.666 73.9447 118.666C74.5336 118.666 74.8763 118.965 75.0521 119.633L77.5394 128.738H77.6097L79.8861 119.483C80.0179 118.938 80.3431 118.666 80.8529 118.666C81.433 118.666 81.8197 119.018 81.8197 119.554C81.8197 119.729 81.7933 119.914 81.723 120.151L78.7875 130.663C78.5941 131.331 78.2601 131.63 77.6625 131.63C77.0385 131.63 76.7045 131.349 76.5111 130.663L73.9799 121.927H73.892L71.3695 130.663C71.1761 131.34 70.8334 131.63 70.2181 131.63ZM84.3597 131.656C83.806 131.656 83.4105 131.278 83.4105 130.654V119.624C83.4105 119.026 83.7709 118.64 84.351 118.64C84.9398 118.64 85.2914 119.026 85.2914 119.624V123.79H85.3353C85.8451 122.709 86.8558 122.085 88.2621 122.085C90.2924 122.085 91.5052 123.438 91.5052 125.53V130.654C91.5052 131.278 91.1097 131.656 90.5472 131.656C89.9935 131.656 89.598 131.278 89.598 130.654V125.899C89.598 124.537 88.9125 123.72 87.5765 123.72C86.1703 123.72 85.309 124.687 85.309 126.146V130.654C85.309 131.278 84.9135 131.656 84.3597 131.656ZM96.0492 131.647C94.2386 131.647 92.9642 130.522 92.9642 128.861C92.9642 127.244 94.2123 126.251 96.4008 126.128L98.9408 125.979V125.267C98.9408 124.238 98.2465 123.623 97.0863 123.623C96.1722 123.623 95.5658 123.948 95.0385 124.792C94.8451 125.073 94.599 125.196 94.265 125.196C93.7904 125.196 93.4476 124.88 93.4476 124.405C93.4476 124.212 93.5004 124.001 93.6146 123.79C94.098 122.744 95.4955 122.076 97.1566 122.076C99.3978 122.076 100.83 123.263 100.83 125.117V130.698C100.83 131.296 100.453 131.656 99.9164 131.656C99.389 131.656 99.0287 131.313 99.0111 130.751V129.969H98.9672C98.431 130.997 97.2533 131.647 96.0492 131.647ZM96.5677 130.145C97.8949 130.145 98.9408 129.23 98.9408 128.026V127.297L96.6556 127.438C95.5219 127.517 94.8802 128.018 94.8802 128.809C94.8802 129.617 95.557 130.145 96.5677 130.145ZM103.23 129.274V123.746H102.562C102.07 123.746 101.771 123.465 101.771 122.999C101.771 122.524 102.07 122.243 102.562 122.243H103.23V120.872C103.23 120.266 103.608 119.861 104.188 119.861C104.759 119.861 105.137 120.266 105.137 120.872V122.243H106.218C106.71 122.243 107.009 122.533 107.009 122.999C107.009 123.465 106.71 123.746 106.218 123.746H105.137V128.853C105.137 129.591 105.392 129.925 106.078 129.978L106.227 129.986C106.772 130.039 107.044 130.259 107.044 130.707C107.044 131.278 106.605 131.568 105.673 131.568H105.577C104.021 131.568 103.23 130.804 103.23 129.274ZM111.87 131.665C110.05 131.665 108.714 130.918 108.275 129.784C108.213 129.644 108.196 129.512 108.196 129.389C108.196 128.914 108.538 128.633 109.013 128.633C109.329 128.633 109.602 128.782 109.839 129.134C110.314 129.881 110.868 130.215 111.966 130.215C113.047 130.215 113.777 129.749 113.777 128.984C113.777 128.378 113.416 128.053 112.423 127.815L110.964 127.473C109.171 127.051 108.292 126.172 108.292 124.854C108.292 123.184 109.743 122.076 111.94 122.076C113.61 122.076 114.981 122.929 115.245 124.019C115.262 124.124 115.28 124.212 115.28 124.3C115.28 124.722 115.016 125.003 114.541 125.003C114.234 125.003 113.961 124.897 113.777 124.599C113.364 123.896 112.801 123.526 111.87 123.526C110.85 123.526 110.147 124.027 110.147 124.748C110.147 125.328 110.595 125.732 111.571 125.961L113.003 126.295C114.946 126.743 115.693 127.438 115.693 128.809C115.693 130.522 114.155 131.665 111.87 131.665ZM119.868 131.647C118.057 131.647 116.783 130.522 116.783 128.861C116.783 127.244 118.031 126.251 120.219 126.128L122.759 125.979V125.267C122.759 124.238 122.065 123.623 120.905 123.623C119.991 123.623 119.384 123.948 118.857 124.792C118.663 125.073 118.417 125.196 118.083 125.196C117.609 125.196 117.266 124.88 117.266 124.405C117.266 124.212 117.319 124.001 117.433 123.79C117.916 122.744 119.314 122.076 120.975 122.076C123.216 122.076 124.649 123.263 124.649 125.117V130.698C124.649 131.296 124.271 131.656 123.735 131.656C123.207 131.656 122.847 131.313 122.829 130.751V129.969H122.786C122.249 130.997 121.072 131.647 119.868 131.647ZM120.386 130.145C121.713 130.145 122.759 129.23 122.759 128.026V127.297L120.474 127.438C119.34 127.517 118.699 128.018 118.699 128.809C118.699 129.617 119.375 130.145 120.386 130.145ZM127.444 134.768C126.881 134.768 126.495 134.381 126.495 133.757V123.052C126.495 122.445 126.872 122.076 127.409 122.076C127.945 122.076 128.331 122.445 128.331 123.052V123.834H128.367C128.911 122.771 129.975 122.094 131.311 122.094C133.658 122.094 135.204 123.939 135.204 126.866C135.204 129.793 133.666 131.647 131.346 131.647C130.019 131.647 128.964 130.997 128.437 129.969H128.393V133.757C128.393 134.381 127.997 134.768 127.444 134.768ZM130.81 130.039C132.313 130.039 133.253 128.809 133.253 126.866C133.253 124.933 132.313 123.693 130.81 123.693C129.36 123.693 128.384 124.959 128.384 126.866C128.384 128.791 129.351 130.039 130.81 130.039ZM137.621 134.768C137.059 134.768 136.672 134.381 136.672 133.757V123.052C136.672 122.445 137.05 122.076 137.586 122.076C138.122 122.076 138.509 122.445 138.509 123.052V123.834H138.544C139.089 122.771 140.153 122.094 141.489 122.094C143.835 122.094 145.382 123.939 145.382 126.866C145.382 129.793 143.844 131.647 141.524 131.647C140.197 131.647 139.142 130.997 138.615 129.969H138.571V133.757C138.571 134.381 138.175 134.768 137.621 134.768ZM140.988 130.039C142.491 130.039 143.431 128.809 143.431 126.866C143.431 124.933 142.491 123.693 140.988 123.693C139.537 123.693 138.562 124.959 138.562 126.866C138.562 128.791 139.529 130.039 140.988 130.039Z" fill="#3A3734" />
-            </g>
-            <defs>
-              <filter id="filter0_d_85_2176" x="-1.90735e-05" y="-0.000385284" width="212.979" height="184.979" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-                <feFlood flood-opacity="0" result="BackgroundImageFix" />
-                <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
-                <feOffset />
-                <feGaussianBlur stdDeviation="10.2448" />
-                <feComposite in2="hardAlpha" operator="out" />
-                <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.2 0" />
-                <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_85_2176" />
-                <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_85_2176" result="shape" />
-              </filter>
-            </defs>
-          </svg>
+      <div className="flex flex-wrap gap-6 justify-center">
+        {contactData?.map((item) => (
+          <div
+            key={item.id}
+            className="relative w-[174px] h-[146px] shadow rounded-2xl flex flex-col justify-center items-center"
+          >
+            {/* DELETE */}
+            <button
+              className="absolute top-4 left-2 z-10"
+              onClick={() => handleContactDelete(item.platform)}
+            >
+              {isLoading && id === item.platform ? (
+                <Spinner />
+              ) : (
+                <FaTrash size={18} />
+              )}
+            </button>
 
-        </span> */}
-
-        <div className=' w-[174px] h-[146px] shadow rounded-2xl flex flex-col  justify-center items-center  ' >
-          <span className=' text-xl font-semibold  ' >What's App</span>
-          <FaWhatsapp className=' text-5xl my-4 ' />
-        </div>
-
+            {/* CONTENT */}
+            <a
+              href={item.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex flex-col items-center gap-2"
+            >
+              <span className="text-xl font-semibold">{item.platform}</span>
+              <img
+                src={item.icon}
+                alt={item.platform}
+                className="w-10 h-10 object-contain"
+              />
+            </a>
+          </div>
+        ))}
       </div>
 
 
 
-      <Dialog>
+
+      <Dialog open={createModal} onOpenChange={setCreateModal}  >
         {/* Trigger Button */}
         <DialogTrigger asChild>
           <div className="mt-20 flex justify-center cursor-pointer">
@@ -67,13 +107,35 @@ const ContactInfo = () => {
         <DialogContent className="sm:max-w-lg">
 
           <div className="mt-4">
-            <ContactFrom />
+            <ContactFrom setCreateModal={setCreateModal} />
           </div>
           <DialogClose asChild>
             {/* <button className="absolute top-3 right-3 p-1 rounded-full hover:bg-gray-200">
               <X size={20} />
             </button> */}
           </DialogClose>
+        </DialogContent>
+      </Dialog>
+
+
+      {/* update modal  */}
+
+
+      <Dialog open={updateModal} onOpenChange={setUpdateModal}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Update Contact</DialogTitle>
+            <DialogDescription>
+              Edit platform information
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* {updateModal && sigleContact && (
+            <ContactUpdate
+              setUpdateModal={setUpdateModal}
+              data={sigleContact}
+            />
+          )} */}
         </DialogContent>
       </Dialog>
 
