@@ -49,6 +49,8 @@ const Layout = () => {
 
     }
 
+
+
     useEffect(() => {
         const loggedOut = autoLogoutAfter7Days();
 
@@ -56,6 +58,18 @@ const Layout = () => {
             window.location.href = "/";
         }
     }, []);
+
+
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        console.log(token)
+        if (!token) {
+            window.location.href = "/"
+        }
+    }, [])
+
+
+
 
     return (
         <div className="flex h-screen">
