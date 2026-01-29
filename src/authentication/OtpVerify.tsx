@@ -1,6 +1,5 @@
-"use client";
 import React, { useRef, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import {  useSearchParams } from "react-router-dom";
 import { useOtpVerifyMutation, useResendOtpMutation } from "../api/auth/authApi";
 import { toast } from "sonner";
 import { errorMessage } from "../lib/error/errorMsg";
@@ -34,7 +33,6 @@ const OtpVerify = () => {
     const email: string | null = searchParams.get("email");
     console.log(email)
 
-    const navigate = useNavigate();
 
     const [otpVerify, { isLoading }] = useOtpVerifyMutation();
 

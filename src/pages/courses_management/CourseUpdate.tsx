@@ -14,15 +14,13 @@ import { Button } from "../../components/ui/button";
 import { Spinner } from "../../components/ui/spinner";
 
 interface CourseUpdateProps {
-    selectedCourse: {
-        id: number;
-        thumbnail: string;
-        title: string;
-        description: string;
-        price: string;
-        is_published: number;
-        reward_points: string;
-    };
+    id: number;
+    thumbnail: string;
+    title: string;
+    description: string;
+    price: string;
+    is_published: number;
+    reward_points: string;
     setOpenUpdateModal: (open: boolean) => void;
 }
 

@@ -1,8 +1,16 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Editor } from "primereact/editor";
 import type { EditorTextChangeEvent } from "primereact/editor";
 import { Button } from "primereact/button";
+import { errorMessage } from "../../lib/error/errorMsg";
+import { useAllFaqQuery, useCreateFaqMutation, useFaqDeleteMutation, useFaqUpdateMutation } from "../../api/faq-api/faqApi";
+import { toast } from "sonner";
+import type { FAQTYPE } from "../../lib/type/faqType";
+import DOMPurify from "dompurify";
+import { deleteAlert } from "../../lib/alert/deleteAlert";
+import { Spinner } from "../../components/ui/spinner";
+import { courseUpdateAlert } from "../../lib/alert/courseUpdateAlert";
 
 const Faq: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -10,14 +18,111 @@ const Faq: React.FC = () => {
     const [question, setQuestion] = useState("");
     const [answer, setAnswer] = useState("");
 
-    const handleSave = () => {
-        console.log("Question:", question);
-        console.log("Answer:", answer);
-        setIsModalOpen(false);
-        // Reset fields if needed
-        setQuestion("");
-        setAnswer("");
+    // ========================  Create faq =======================
+
+    const [createFaq, { isLoading }] = useCreateFaqMutation();
+
+    const handleSave = async () => {
+        try {
+
+
+            const payload = {
+                question: question,
+                answer: answer,
+                is_active: 1
+            }
+
+            const res = await createFaq(payload).unwrap();
+            if (res) {
+                setIsModalOpen(false);
+                setQuestion("");
+                setAnswer("");
+                toast.success(res?.message)
+            }
+        } catch (error) {
+            return errorMessage(error);
+        }
     };
+
+
+    // ========================== All faq ============================
+
+
+    const { data } = useAllFaqQuery({});
+
+    const faqData: FAQTYPE[] = data?.data?.data || []
+
+
+
+
+    // =============================FAQ delete ============================
+
+    const [faqDelete] = useFaqDeleteMutation();
+
+    const handleFaqdelete = async (id: number) => {
+        try {
+
+            const res = await deleteAlert();
+
+            if (res.isConfirmed) {
+                const res = await faqDelete(id).unwrap();
+                if (res) {
+                    toast.success(res?.message);
+                }
+            }
+
+        } catch (error) {
+            return errorMessage(error)
+        }
+    }
+
+    // ============================ faq update ========================
+
+    const [selectedItem, setSelectedItem] = useState<FAQTYPE | null>(null);
+
+    const [faqUpdate, { isLoading: uploadLoading }] = useFaqUpdateMutation();
+
+
+    const [updateQuestion, setUpdateQuestion] = useState<string>();
+    const [updateAnser, setUpdateAnser] = useState<string>();
+
+    console.log(selectedItem)
+
+
+    useEffect(() => {
+        if (selectedItem) {
+            setUpdateQuestion(selectedItem.question)
+            setUpdateAnser(selectedItem.answer)
+        }
+    }, [selectedItem])
+
+    const payload = {
+        question: updateQuestion,
+        answer: updateAnser,
+        is_active: 1
+    }
+
+
+
+
+    const handleUpdateFaq = async () => {
+        try {
+            const id = selectedItem?.id
+            const res = await courseUpdateAlert()
+            if (res.isConfirmed) {
+                const res = await faqUpdate({ id, payload }).unwrap();
+                if (res) {
+                    setUpdateModal(false)
+                    toast.success(res?.message);
+                }
+            }
+
+        } catch (error) {
+            return errorMessage(error)
+        }
+    }
+
+
 
     return (
         <div className="p-6">
@@ -45,26 +150,46 @@ const Faq: React.FC = () => {
             </div>
 
 
-            <div className=" mt-10 flex items-center justify-between px-6 shadow shadow-[#00000040] rounded-[4px] py-3 bg-white " >
-                <div>
-                    <h1 className=" font-medium text-lg " >System Maintenance Notice</h1>
-                    <p className=" mt-3 text-sm " >Sent to all users - 2 hours ago</p>
-                </div>
-                <div className=" flex items-center gap-x-5 " >
-                    {/* update <button></button> */}
-                    <span onClick={() => { setUpdateModal(true) }} className=" mt-1.5 cursor-pointer " >
-                        <svg width="21" height="24" viewBox="0 0 21 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M11.5163 0C11.8098 0.000325574 12.0921 0.11272 12.3056 0.31422C12.519 0.51572 12.6475 0.791115 12.6647 1.08414C12.6819 1.37716 12.5865 1.66569 12.3981 1.89078C12.2097 2.11587 11.9425 2.26053 11.651 2.2952L11.5163 2.30326H2.30326V18.4261H18.4261V9.21303C18.4264 8.91951 18.5388 8.63718 18.7403 8.42374C18.9418 8.21031 19.2172 8.08186 19.5102 8.06466C19.8032 8.04746 20.0918 8.14279 20.3168 8.33119C20.5419 8.51959 20.6866 8.78682 20.7213 9.07829L20.7293 9.21303V18.4261C20.7295 19.0072 20.51 19.5668 20.1149 19.9929C19.7198 20.419 19.1783 20.68 18.5988 20.7236L18.4261 20.7293H2.30326C1.72217 20.7295 1.16249 20.51 0.736412 20.1149C0.31033 19.7198 0.0493397 19.1783 0.00575839 18.5988L1.15472e-07 18.4261V2.30326C-0.000183776 1.72217 0.219278 1.16249 0.614391 0.736412C1.0095 0.31033 1.55107 0.0493396 2.13051 0.00575828L2.30326 0H11.5163ZM18.7059 0.395009C18.9132 0.188466 19.1912 0.0685524 19.4837 0.059622C19.7762 0.0506916 20.0611 0.153414 20.2805 0.346927C20.5 0.540439 20.6375 0.810231 20.6653 1.1015C20.693 1.39278 20.6089 1.68369 20.4299 1.91516L20.3343 2.02456L8.93319 13.4245C8.72594 13.6311 8.44785 13.751 8.1554 13.7599C7.86294 13.7689 7.57805 13.6661 7.35859 13.4726C7.13913 13.2791 7.00155 13.0093 6.97381 12.718C6.94606 12.4268 7.03022 12.1359 7.2092 11.9044L7.30478 11.7961L18.7059 0.395009Z" fill="#686868" />
-                        </svg>
-                    </span>
-                    <span className=" cursor-pointer " >
-                        <svg width="19" height="21" viewBox="0 0 19 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M1.15163 20.7293V3.45489H0V1.15163H5.75815V0H12.6679V1.15163H18.4261V3.45489H17.2744V20.7293H1.15163ZM3.45489 18.4261H14.9712V3.45489H3.45489V18.4261ZM5.75815 16.1228H8.06141V5.75815H5.75815V16.1228ZM10.3647 16.1228H12.6679V5.75815H10.3647V16.1228Z" fill="#686868" />
-                        </svg>
+            <div className=" mt-10  px-6  py-3 bg-white " >
+                {
+                    faqData?.map((item, i) => {
+                        return (
+                            <div key={i} className=" flex shadow shadow-[#00000040] rounded-[4px] p-4  justify-between items-center my-8 " >
+                                <div className="  " >
+                                    <h1 className=" font-medium text-xl " >{item?.question}</h1>
+                                    <p
+                                        className="mt-3 text-lg"
+                                        dangerouslySetInnerHTML={{
+                                            __html: DOMPurify.sanitize(item?.answer || ""),
+                                        }}
+                                    />
+                                </div>
+                                <div className=" flex items-center gap-x-5  " >
+                                    {/* update <button></button> */}
+                                    <span onClick={() => {
+                                        setSelectedItem(item);
+                                        setUpdateModal(true);
+                                    }} className=" mt-1.5 cursor-pointer " >
 
-                    </span>
-                </div>
+                                        <svg width="21" height="24" viewBox="0 0 21 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M11.5163 0C11.8098 0.000325574 12.0921 0.11272 12.3056 0.31422C12.519 0.51572 12.6475 0.791115 12.6647 1.08414C12.6819 1.37716 12.5865 1.66569 12.3981 1.89078C12.2097 2.11587 11.9425 2.26053 11.651 2.2952L11.5163 2.30326H2.30326V18.4261H18.4261V9.21303C18.4264 8.91951 18.5388 8.63718 18.7403 8.42374C18.9418 8.21031 19.2172 8.08186 19.5102 8.06466C19.8032 8.04746 20.0918 8.14279 20.3168 8.33119C20.5419 8.51959 20.6866 8.78682 20.7213 9.07829L20.7293 9.21303V18.4261C20.7295 19.0072 20.51 19.5668 20.1149 19.9929C19.7198 20.419 19.1783 20.68 18.5988 20.7236L18.4261 20.7293H2.30326C1.72217 20.7295 1.16249 20.51 0.736412 20.1149C0.31033 19.7198 0.0493397 19.1783 0.00575839 18.5988L1.15472e-07 18.4261V2.30326C-0.000183776 1.72217 0.219278 1.16249 0.614391 0.736412C1.0095 0.31033 1.55107 0.0493396 2.13051 0.00575828L2.30326 0H11.5163ZM18.7059 0.395009C18.9132 0.188466 19.1912 0.0685524 19.4837 0.059622C19.7762 0.0506916 20.0611 0.153414 20.2805 0.346927C20.5 0.540439 20.6375 0.810231 20.6653 1.1015C20.693 1.39278 20.6089 1.68369 20.4299 1.91516L20.3343 2.02456L8.93319 13.4245C8.72594 13.6311 8.44785 13.751 8.1554 13.7599C7.86294 13.7689 7.57805 13.6661 7.35859 13.4726C7.13913 13.2791 7.00155 13.0093 6.97381 12.718C6.94606 12.4268 7.03022 12.1359 7.2092 11.9044L7.30478 11.7961L18.7059 0.395009Z" fill="#686868" />
+                                        </svg>
+                                    </span>
+                                    <span onClick={() => handleFaqdelete(item?.id)} className=" cursor-pointer " >
+                                        <svg width="19" height="21" viewBox="0 0 19 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M1.15163 20.7293V3.45489H0V1.15163H5.75815V0H12.6679V1.15163H18.4261V3.45489H17.2744V20.7293H1.15163ZM3.45489 18.4261H14.9712V3.45489H3.45489V18.4261ZM5.75815 16.1228H8.06141V5.75815H5.75815V16.1228ZM10.3647 16.1228H12.6679V5.75815H10.3647V16.1228Z" fill="#686868" />
+                                        </svg>
+
+                                    </span>
+                                </div>
+                            </div>
+                        )
+                    })
+                }
             </div>
+
+
+            {/* create modal  */}
 
             {/* Modal */}
             {isModalOpen && (
@@ -109,14 +234,18 @@ const Faq: React.FC = () => {
                                 onClick={() => setIsModalOpen(false)}
                             />
                             <Button
-                                label="Save"
+
                                 className="py-3 rounded-lg px-7  font-bold bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] transition-colors duration-200 shadow-md text-white"
                                 onClick={handleSave}
-                            />
+                            >
+                                {isLoading ? <div className=" flex justify-center  " ><Spinner /> </div> : "Save"}
+                            </Button>
                         </div>
                     </div>
                 </div>
             )}
+
+            {/* update modal  */}
 
 
             {updateModal && (
@@ -132,8 +261,8 @@ const Faq: React.FC = () => {
                             <input
                                 type="text"
                                 className="w-full border rounded px-3 py-2 focus:outline-0 "
-                                value={question}
-                                onChange={(e) => setQuestion(e.target.value)}
+                                value={updateQuestion}
+                                onChange={(e) => setUpdateQuestion(e.target.value)}
                                 placeholder="Enter your question"
                             />
                         </div>
@@ -144,9 +273,9 @@ const Faq: React.FC = () => {
                                 Answer
                             </label>
                             <Editor
-                                value={answer}
+                                value={updateAnser}
                                 onTextChange={(e: EditorTextChangeEvent) =>
-                                    setAnswer(e.htmlValue || "")
+                                    setUpdateAnser(e.htmlValue || "")
                                 }
                                 style={{ height: "200px" }}
                                 placeholder="Write the answer here..."
@@ -161,10 +290,14 @@ const Faq: React.FC = () => {
                                 onClick={() => setUpdateModal(false)}
                             />
                             <Button
-                                label="Save"
+
                                 className="py-3 rounded-lg px-7  font-bold bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] transition-colors duration-200 shadow-md text-white"
-                                onClick={handleSave}
-                            />
+                                onClick={handleUpdateFaq}
+                            >
+                                {
+                                    uploadLoading ? <div className="flex justify-center" ><Spinner></Spinner></div> : "Update"
+                                }
+                            </Button>
                         </div>
                     </div>
                 </div>
@@ -176,3 +309,4 @@ const Faq: React.FC = () => {
 };
 
 export default Faq;
+

@@ -43,7 +43,7 @@ const CourseLesson = ({ id }: { id: string | undefined }) => {
     };
 
     // =================== DELETE ===================
-    const [lessonDelete, { isLoading: deleteLoading }] = useLessonDeleteMutation();
+    const [lessonDelete,] = useLessonDeleteMutation();
     const courseLessonDelete = async (id: string) => {
         setLessonId(id);
         try {
@@ -254,7 +254,7 @@ const CourseLesson = ({ id }: { id: string | undefined }) => {
                                         </VideoPlayerControlBar>
                                     </VideoPlayer> */}
                                     <ReactPlayer
-                                        url={"<ReactPlayer src='https://www.youtube.com/watch?v=LXb3EKWsInQ"}
+                                        // url={"<ReactPlayer src='https://www.youtube.com/watch?v=LXb3EKWsInQ"}
                                     // width="100%"
                                     // height="100%"
                                     // controls
