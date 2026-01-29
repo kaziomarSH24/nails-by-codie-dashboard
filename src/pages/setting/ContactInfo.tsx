@@ -1,4 +1,4 @@
-import { FaEdit, FaTrash, FaWhatsapp } from 'react-icons/fa'
+import { FaTrash, } from 'react-icons/fa'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTrigger } from '../../components/ui/dialog'
 import ContactFrom from './ContactFrom'
 import { useAllContactInfoQuery, useContactDeleteMutation } from '../../api/contact-api/contactApi'
@@ -9,8 +9,6 @@ import { errorMessage } from '../../lib/error/errorMsg'
 import { deleteAlert } from '../../lib/alert/deleteAlert'
 import { toast } from 'sonner'
 import { Spinner } from '../../components/ui/spinner'
-import ContactUpdate, { type ContactData } from './ContactUpdate'
-import { Link } from 'react-router-dom'
 
 const ContactInfo = () => {
   const { data } = useAllContactInfoQuery({});
@@ -18,7 +16,6 @@ const ContactInfo = () => {
 
   const [updateModal, setUpdateModal] = useState<boolean>(false);
   const [createModal, setCreateModal] = useState<boolean>(false);
-  const [sigleContact, setContactData] = useState<ContactData>();
   const [id, setId] = useState<string>();
 
 

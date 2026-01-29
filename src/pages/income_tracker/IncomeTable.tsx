@@ -33,7 +33,7 @@ const IncomeTable = () => {
 
     // tranzsition api
 
-    const { data, isLoading } = useIncomeReportQuery({});
+    const { data } = useIncomeReportQuery({});
 
     const allTransactions: Transaction[] = data?.report?.data || [];
 

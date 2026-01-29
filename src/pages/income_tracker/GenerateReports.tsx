@@ -18,7 +18,7 @@ import { useState } from "react";
 // import { useReportGenerateQuery } from "../../api/report/reportApi";
 
 
-type FormatType = "pdf" | "excel";
+type FormatType = "pdf" | "excel" | undefined;
 
 const GenerateReports = () => {
     const [day, setDay] = useState<string>();
@@ -32,7 +32,7 @@ const GenerateReports = () => {
 
     const token = localStorage.getItem("token")
 
-    const handleDownload = async (format: "excel" | "pdf") => {
+    const handleDownload = async (format: "excel" | "pdf" | undefined) => {
         try {
             const apiUrl = import.meta.env.VITE_YOUTUBE_API_KEY; // backend base URL
             const response = await axios.get(`${apiUrl}/admin/income/generate-report`, {

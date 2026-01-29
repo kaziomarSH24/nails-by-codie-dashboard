@@ -9,7 +9,7 @@ import { Button } from "../../components/ui/button";
 import { Card, CardContent } from "../../components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { Badge } from "../../components/ui/badge";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../../components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../../components/ui/dialog";
 import { Link } from "react-router-dom";
 import { useAllCourseQuery, useDeleteCourseMutation } from "../../api/course-api/courseApi";
 import type { CourseType } from "../../lib/type/courseType";
@@ -20,7 +20,6 @@ import { toast } from "sonner";
 import { Spinner } from "../../components/ui/spinner";
 
 import CourseUpdate from "./CourseUpdate";
-import { Label } from "recharts";
 import type { CourseLessonType, Lesson } from "../../lib/type/lessonType";
 import { useGetLessonByCourseIdQuery } from "../../api/lesson-api/lessonApi";
 
@@ -66,7 +65,6 @@ const CourseTable = () => {
     };
 
     const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
-
     console.log(selectedCourse)
 
     // Pagination states
@@ -103,7 +101,7 @@ const CourseTable = () => {
         setCourseId(id);
     }
 
-    const { data: courseDetails, isLoading: courseDetailsLoading } = useGetLessonByCourseIdQuery(courseId);
+    const { data: courseDetails } = useGetLessonByCourseIdQuery(courseId);
 
 
     const courseTitle: CourseLessonType = courseDetails?.data;

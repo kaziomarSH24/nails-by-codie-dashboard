@@ -5,9 +5,7 @@ import type { Appointment, Enrollment } from '../../lib/type/userType';
 
 const UserDetails = ({ id }: { id: number }) => {
     const { data, isLoading } = useUserDetailsQuery(id);
-    console.log("user details is", data?.data);
     const userDetails: UserDetails = data?.data;
-    console.log("user details ", userDetails);
     const courseEnroll: Enrollment[] = data?.data?.enrollments || [];
     const appointment: Appointment[] = data?.data?.appointments || [];
     return (

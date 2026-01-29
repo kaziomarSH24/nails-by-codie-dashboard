@@ -1,4 +1,3 @@
-"use client";
 
 import { useState } from "react";
 import { Search, RefreshCw } from "lucide-react";
@@ -6,9 +5,9 @@ import { Search, RefreshCw } from "lucide-react";
 import { Input } from "../../components/ui/input";
 import { Dialog, DialogContent, DialogTrigger } from "../../components/ui/dialog";
 import { Button } from "../../components/ui/button";
-import UserDetails from "./UserDetails";
 import { useAllUsersQuery } from "../../api/user-api/userApi";
 import type { User } from "../../lib/type/userType";
+import UserDetails from "./UserDetails";
 
 const ITEMS_PER_PAGE = 15;
 

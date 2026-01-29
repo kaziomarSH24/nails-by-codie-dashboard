@@ -8,8 +8,6 @@ import UsersManagement from '../pages/users_management/UsersManagement';
 import StockManagement from '../pages/stock_management/StockManagement';
 import IncomeTracker from '../pages/income_tracker/IncomeTracker';
 import Notification from '../pages/notification/Notification';
-import AddNewCourse from '../pages/courses_management/AddCourse';
-import AddLessonForm from '../pages/courses_management/AddLeason';
 import RewardsSystem from '../pages/rewards_system/RewardsSystem';
 import LoginFrom from '../authentication/LoginFrom';
 import EmailVerifyFrom from '../authentication/EmailVerifyFrom';
@@ -19,6 +17,10 @@ import Profile from '../pages/setting/Profile';
 import TermCondiction from '../pages/setting/TermCondiction';
 import Faq from '../pages/setting/Faq';
 import ContactInfo from '../pages/setting/ContactInfo';
+import AddNewCourse from '../pages/courses_management/AddCourse';
+import { AddLeason } from './../pages/courses_management/AddLeason';
+
+
 
 export const router = createBrowserRouter([
     {
@@ -75,7 +77,7 @@ export const router = createBrowserRouter([
             },
             {
                 path: "add-leason/:id",
-                element: React.createElement(AddLessonForm)
+                element: React.createElement(AddLeason)
             },
             {
                 path: "rewards-system",

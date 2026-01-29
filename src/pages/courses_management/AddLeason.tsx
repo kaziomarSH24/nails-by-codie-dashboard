@@ -19,7 +19,7 @@ type FormValues = {
     video_url?: string;
 };
 
-function AddLessonForm() {
+export const AddLeason = () => {
     const { id } = useParams<{ id: string }>();
 
     const token = localStorage.getItem("token");
@@ -65,7 +65,7 @@ function AddLessonForm() {
             headers: { Authorization: `Bearer ${token}` },
             query: { course_id: id },
             fileType: ["mp4", "mkv", "mov", "avi"],
-            fileParameterName: "video_file", // must match Laravel
+            fileParameterName: "video_file",
         });
 
         if (!r.support) {
@@ -81,9 +81,9 @@ function AddLessonForm() {
             r.upload();
         });
 
-        r.on("fileProgress", (file) => setProgress(Math.floor(file.progress() * 100)));
+        r.on("fileProgress", (file) => setProgress(Math.floor(file.progress(true) * 100)));
 
-        r.on("fileSuccess", (_file, message) => {
+        r.on("fileSuccess", (_file: string, message: string) => {
             try {
                 const res = JSON.parse(message);
                 console.log(res)
@@ -142,7 +142,7 @@ function AddLessonForm() {
     // ======================= calculate video url duraction =================================
 
     const [loadingDuration, setLoadingDuration] = useState(false);
-    const [durationError, setDurationError] = useState('');
+    const [durationError, setDurationError] = useState<string>('');
     const [videoDuration, setVideoDuration] = useState(''); // formatted (4:13)
     const [videoMinutes, setVideoMinutes] = useState(0);   // total minutes (5)
     const [timeLoading, setTimeLoading] = useState<boolean>(false);
@@ -158,9 +158,9 @@ function AddLessonForm() {
         const matches = isoDuration.match(regex);
         if (!matches) return "Unknown";
 
-        const hours = parseInt(matches[1] || 0);
-        const minutes = parseInt(matches[2] || 0);
-        const seconds = parseInt(matches[3] || 0);
+        const hours = parseInt(matches[1] || "0");
+        const minutes = parseInt(matches[2] || "0");
+        const seconds = parseInt(matches[3] || "0");
 
         if (hours > 0) {
             return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
@@ -175,9 +175,9 @@ function AddLessonForm() {
 
         if (!matches) return 0;
 
-        const hours = parseInt(matches[1] || 0);
-        const minutes = parseInt(matches[2] || 0);
-        const seconds = parseInt(matches[3] || 0);
+        const hours = parseInt(matches[1] || "0");
+        const minutes = parseInt(matches[2] || "0");
+        const seconds = parseInt(matches[3] || "0");
 
         return hours * 60 + minutes + Math.ceil(seconds / 60);
     };
@@ -213,7 +213,7 @@ function AddLessonForm() {
             // UI format
             const formatted = parseDuration(isoDuration);
 
-            // minutes convert
+
             const totalMinutes = durationToMinutes(isoDuration);
 
             setVideoDuration(formatted);
@@ -221,11 +221,14 @@ function AddLessonForm() {
             setTimeLoading(false)
 
         } catch (err) {
-            setDurationError(err.message);
-        } finally {
-            setLoadingDuration(false);
-        }
-    };
+            if (err instanceof Error) {
+                setDurationError(err.message);
+            } else {
+                setDurationError("Something went wrong");
+            }
+        };
+    }
+
 
 
 
@@ -453,6 +456,6 @@ function AddLessonForm() {
             </div>
         </div>
     );
-}
+};
 
-export default AddLessonForm;
+
