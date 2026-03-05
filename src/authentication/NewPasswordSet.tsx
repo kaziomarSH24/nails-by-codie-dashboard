@@ -25,7 +25,6 @@ const NewPasswordSet = () => {
         }
         navigate("/dashboard");
 
-        console.log("New Password Data:", formData);
         // 🔒 Add your password reset logic here
     };
 

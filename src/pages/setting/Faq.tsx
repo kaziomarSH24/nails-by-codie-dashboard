@@ -86,7 +86,6 @@ const Faq: React.FC = () => {
     const [updateQuestion, setUpdateQuestion] = useState<string>();
     const [updateAnser, setUpdateAnser] = useState<string>();
 
-    console.log(selectedItem)
 
 
     useEffect(() => {

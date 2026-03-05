@@ -28,7 +28,6 @@ const ContactInfo = () => {
       if (res.isConfirmed) {
         const res = await contactDelete(id).unwrap();
         if (res) {
-          console.log(res);
           toast.success(res?.message)
         }
       }

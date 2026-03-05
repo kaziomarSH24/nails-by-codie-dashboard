@@ -70,3 +70,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* .flex.mt-12.gap-x-12 {
+  gap: 60px;
+} */

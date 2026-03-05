@@ -4,7 +4,6 @@ import type { DashboardStats } from "../../lib/type/incomeType";
 
 const IncomeOverview = () => {
     const { data } = useIncomeReportQuery({});
-    console.log("income data is", data);
     const stats: DashboardStats = data?.stats
     return (
         <div className=' flex justify-between gap-x-4 ' >

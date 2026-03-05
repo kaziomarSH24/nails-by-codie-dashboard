@@ -7,5 +7,4 @@ export const errorMessage = (err: FetchBaseQueryError | unknown) => {
     };
 
     toast.error(error.data?.message || "Something went wrong ❌");
-    console.log(err);
 }

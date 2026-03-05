@@ -31,7 +31,6 @@ const OtpVerify = () => {
 
 
     const email: string | null = searchParams.get("email");
-    console.log(email)
 
 
     const [otpVerify, { isLoading }] = useOtpVerifyMutation();
@@ -59,7 +58,6 @@ const OtpVerify = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const code = otp.join("");
-        // console.log("Entered OTP:", code);
         // alert(`Your entered OTP is: ${code}`);
         // navigate("/new-password-set");
         // const formData = {

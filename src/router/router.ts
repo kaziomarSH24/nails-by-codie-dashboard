@@ -19,6 +19,7 @@ import Faq from '../pages/setting/Faq';
 import ContactInfo from '../pages/setting/ContactInfo';
 import AddNewCourse from '../pages/courses_management/AddCourse';
 import { AddLeason } from './../pages/courses_management/AddLeason';
+import Support from '../pages/support/Support';
 
 
 
@@ -38,6 +39,10 @@ export const router = createBrowserRouter([
     {
         path: "/new-password-set",
         element: React.createElement(NewPasswordSet)
+    },
+    {
+        path: "/support",
+        element: React.createElement(Support)
     },
     {
         path: "/dashboard",

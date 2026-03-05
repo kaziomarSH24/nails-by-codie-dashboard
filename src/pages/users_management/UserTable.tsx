@@ -8,8 +8,7 @@ import { Button } from "../../components/ui/button";
 import { useAllUsersQuery } from "../../api/user-api/userApi";
 import type { User } from "../../lib/type/userType";
 import UserDetails from "./UserDetails";
-
-const ITEMS_PER_PAGE = 15;
+const ITEMS_PER_PAGE = 14;
 
 const UserTable = () => {
     const [search, setSearch] = useState("");
@@ -22,9 +21,9 @@ const UserTable = () => {
     /* ---------------- SEARCH ---------------- */
     const filteredUsers: User[] = usersData.filter(
         (user) =>
-            user.name.toLowerCase().includes(search.toLowerCase()) ||
-            user.email.toLowerCase().includes(search.toLowerCase()) ||
-            user.phone.toLowerCase().includes(search.toLowerCase())
+            user?.name?.toLowerCase().includes(search?.toLowerCase()) ||
+            user?.email?.toLowerCase().includes(search?.toLowerCase()) ||
+            user?.phone?.toLowerCase().includes(search?.toLowerCase())
     );
 
     /* ---------------- PAGINATION ---------------- */
@@ -128,7 +127,7 @@ const UserTable = () => {
                                     </span>
                                 </td>
 
-                                <td className="px-4 py-2 flex justify-center gap-2">
+                                <td className="px-4  flex justify-center  gap-x-2   ">
                                     <Dialog>
                                         <DialogTrigger asChild>
                                             <Button
@@ -167,6 +166,7 @@ const UserTable = () => {
                     <Button
                         disabled={currentPage === 1}
                         onClick={() => setCurrentPage((p) => p - 1)}
+                        className="bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] text-white"
                     >
                         Prev
                     </Button>
@@ -182,7 +182,7 @@ const UserTable = () => {
                                 className={
                                     currentPage === page
                                         ? "bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] text-white"
-                                        : ""
+                                        : "bg-blue-600 text-white border-blue-600"
                                 }
                                 onClick={() => setCurrentPage(page as number)}
                             >
@@ -194,6 +194,7 @@ const UserTable = () => {
                     <Button
                         disabled={currentPage === totalPages}
                         onClick={() => setCurrentPage((p) => p + 1)}
+                        className="bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] text-white"
                     >
                         Next
                     </Button>

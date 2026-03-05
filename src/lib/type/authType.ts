@@ -78,7 +78,7 @@ export type UserRole = {
 };
 
 // User data type
-export type UserDetails = {
+export interface UserDetailsType {
     id: number;
     name: string;
     email: string;
@@ -97,6 +97,7 @@ export type UserDetails = {
     trial_ends_at: string | null;
     roles: Role[];
     permissions: string[];
+    is_suspended: number
 };
 
 // API response type

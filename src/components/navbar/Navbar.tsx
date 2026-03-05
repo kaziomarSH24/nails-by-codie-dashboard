@@ -1,16 +1,21 @@
 
 import { Bell } from 'lucide-react'
-import { useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useProfileQuery } from '../../api/auth/authApi';
 import { Spinner } from '../ui/spinner';
+import { useUnReadNotificationQuery } from '../../api/notification/notificationApi';
 
 const Navbar = () => {
     const location = useLocation();
     const pathName = location.pathname;
 
     const { data, isLoading } = useProfileQuery({});
-    // const profile: UserResponseType = data;
-    // console.log(profile.data.avatar)
+
+
+    // ============================= unread notificaton ====================================
+
+    const { data: unread } = useUnReadNotificationQuery({});
+
 
     return (
         <div className=' flex items-center justify-between  w-full py-3 ' >
@@ -164,35 +169,14 @@ const Navbar = () => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             </div>
 
             <div className="flex items-center gap-4">
                 {/* Notification Icon */}
-                <button className="p-2 rounded relative">
+                <Link to={"/dashboard/notification"}><button className="p-2 rounded relative">
                     <Bell />
-                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                </button>
+                    <span className="absolute -top-1 -right-1 w-2 h-2  rounded-full"> {unread?.unread_count > 0 ? unread?.unread_count : ""} </span>
+                </button></Link>
 
                 {/* User Avatar */}
                 <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-gray-300">

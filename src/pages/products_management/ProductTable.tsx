@@ -44,7 +44,6 @@ const ProductTable = () => {
         setOpen(true);
     };
 
-    console.log("single product is ", selectedProduct)
 
     // sync product 
 
@@ -178,7 +177,7 @@ const ProductTable = () => {
                                 key={i}
                                 onClick={() => setCurrentPage(i + 1)}
                                 className={`px-3 py-1 rounded-md border ${currentPage === i + 1
-                                    ? "bg-yellow-400 text-white border-yellow-400"
+                                    ? "bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] text-black "
                                     : "bg-white hover:bg-gray-100"
                                     }`}
                             >

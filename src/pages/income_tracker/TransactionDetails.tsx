@@ -10,7 +10,6 @@ const TransactionDetails = ({ viewId }: { viewId: number }) => {
     const { data, isLoading } = useIncomeDetailsQuery(viewId)
 
     const transitionDetails: TransactionDetailsResponse = data?.data;
-    console.log("transitionDetails is ", transitionDetails)
 
     /* ---------- EXPORT CSV ---------- */
     const exportCSV = () => {
@@ -128,7 +127,7 @@ const TransactionDetails = ({ viewId }: { viewId: number }) => {
                 <div className="flex justify-end gap-2">
                     <button
                         onClick={exportCSV}
-                        className="px-3 py-1.5  text-sm rounded bg-yellow-400 hover:bg-yellow-500"
+                        className="px-3 py-1.5  text-sm rounded bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87]"
                     >
                         Download
                     </button>

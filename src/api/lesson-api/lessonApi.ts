@@ -26,6 +26,21 @@ export const lessonApi = baseApi.injectEndpoints({
                 method: "DELETE"
             }),
             invalidatesTags: ["Lesson"]
+        }),
+        singleLesson: builder.query({
+            query: ({ courseId, lessonId }) => ({
+                url: `/admin/courses/${courseId}/lessons/${lessonId}`,
+                method: "GET"
+            }),
+            providesTags: ["Lesson"]
+        }),
+        lessonUpdate: builder.mutation({
+            query: ({ formData, courseId, lessonId }) => ({
+                url: `/admin/courses/${courseId}/lessons/${lessonId}`,
+                method: "PUT",
+                body: formData
+            }),
+            invalidatesTags: ["Lesson"]
         })
 
 
@@ -34,4 +49,4 @@ export const lessonApi = baseApi.injectEndpoints({
     }),
 })
 
-export const { useLessonUploadMutation, useGetLessonByCourseIdQuery, useLessonDeleteMutation } = lessonApi
+export const { useLessonUploadMutation, useGetLessonByCourseIdQuery, useLessonDeleteMutation, useLazySingleLessonQuery, useLessonUpdateMutation } = lessonApi
