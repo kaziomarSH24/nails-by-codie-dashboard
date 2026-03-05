@@ -15,7 +15,6 @@ import {
 } from "../../components/ui/select";
 import { Button } from "../../components/ui/button";
 import { useState } from "react";
-// import { useReportGenerateQuery } from "../../api/report/reportApi";
 
 
 type FormatType = "pdf" | "excel" | undefined;
@@ -34,44 +33,38 @@ const GenerateReports = () => {
 
     const handleDownload = async (format: "excel" | "pdf" | undefined) => {
         try {
-            const apiUrl = import.meta.env.VITE_YOUTUBE_API_KEY; // backend base URL
-            const response = await axios.get(`${apiUrl}/admin/income/generate-report`, {
+            const apiUrl = import.meta.env.VITE_BASE_URL; // backend base URL
+            console.log(apiUrl)
+            const response = await axios.get(`${apiUrl}/api/v1/admin/income/generate-report`, {
                 params: {
                     period: day,
                     search: search,
                     format: format, // excel/pdf
                 },
-                responseType: "blob", // important for binary file
+                responseType: "blob",
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
+            const blob = response.data as Blob;
+            const url = window.URL.createObjectURL(blob);
 
-            // create blob and download
-            const blob = new Blob([response.data], {
-                type:
-                    format === "excel"
-                        ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                        : "application/pdf",
-            });
+            // Open PDF in new tab (preview)
+            window.open(url);
 
-            const downloadUrl = window.URL.createObjectURL(blob);
-            const fileExtension = format === "excel" ? "xlsx" : "pdf";
-            const fileName = `income_report_${new Date().toISOString().split("T")[0]}.${fileExtension}`;
-
+            // Create download link
             const link = document.createElement("a");
-            link.href = downloadUrl;
-            link.download = fileName;
+            link.href = url;
+            link.setAttribute("download", "IncomeReport.pdf");
             document.body.appendChild(link);
             link.click();
+            link.parentNode?.removeChild(link);
 
-            // cleanup
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(downloadUrl);
-
-            console.log(`File downloaded successfully: ${fileName}`);
-        } catch (error) {
-            console.error("File download failed:", error);
+        } catch (err) {
+            console.error("PDF download error:", err);
+            alert("Something went wrong while downloading PDF.");
+        } finally {
+            // setLoading(false);
         }
     };
 
@@ -146,7 +139,7 @@ const GenerateReports = () => {
                         <Button
                             disabled={!day || !format}
                             onClick={() => { handleDownload(format) }}
-                            className="bg-[#91741A] text-white px-6"
+                            className="bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] text-white px-6"
                         >
                             Generate
                         </Button>

@@ -9,7 +9,7 @@ import { Button } from "../../components/ui/button";
 import { Card, CardContent } from "../../components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { Badge } from "../../components/ui/badge";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../../components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogTitle } from "../../components/ui/dialog";
 import { Link } from "react-router-dom";
 import { useAllCourseQuery, useDeleteCourseMutation } from "../../api/course-api/courseApi";
 import type { CourseType } from "../../lib/type/courseType";
@@ -22,6 +22,20 @@ import { Spinner } from "../../components/ui/spinner";
 import CourseUpdate from "./CourseUpdate";
 import type { CourseLessonType, Lesson } from "../../lib/type/lessonType";
 import { useGetLessonByCourseIdQuery } from "../../api/lesson-api/lessonApi";
+import ReactPlayer from "react-player";
+import {
+    MediaController,
+    MediaControlBar,
+    MediaTimeRange,
+    MediaTimeDisplay,
+    MediaVolumeRange,
+    MediaPlaybackRateButton,
+    MediaPlayButton,
+    MediaSeekBackwardButton,
+    MediaSeekForwardButton,
+    MediaMuteButton,
+    MediaFullscreenButton,
+} from "media-chrome/react";
 
 const CourseTable = () => {
 
@@ -30,7 +44,8 @@ const CourseTable = () => {
 
     // ------------------------- ?DELETE COURSE ----------------------
 
-    const [deleteCourse, { isLoading: deleteLoading }] = useDeleteCourseMutation();
+    const [deleteCourse] = useDeleteCourseMutation();
+
 
     const handleDelete = async (id: number) => {
         try {
@@ -39,12 +54,10 @@ const CourseTable = () => {
                 const res = await deleteCourse(id).unwrap();
                 if (res) {
                     refetch();
-                    console.log(res)
                     toast.success(res?.message);
                 }
             }
         } catch (error) {
-            console.log(error)
             return errorMessage(error);
         }
     }
@@ -61,11 +74,12 @@ const CourseTable = () => {
         thumbnail: string;
         title: string;
         description: string;
-        is_published: number;
+        is_published: boolean;
+        price: string;
+        reward_points: string
     };
 
-    const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
-    console.log(selectedCourse)
+    const [selectedCourse, setSelectedCourse] = useState<Course | undefined>(undefined);
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
@@ -94,7 +108,6 @@ const CourseTable = () => {
 
     const [courseDetailsModl, setCourseDetailsModal] = useState<boolean>(false);
     const [courseId, setCourseId] = useState<number | undefined>(undefined);
-    console.log("corse details is", courseId);
 
     const handleCourseDetails = async (id: number) => {
         setCourseDetailsModal(true)
@@ -112,8 +125,14 @@ const CourseTable = () => {
 
 
 
+    const [videoModal, setVideoModal] = useState<boolean>(false);
+    const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
-
+    const handlePlay = async (url: string) => {
+        setVideoUrl(url)
+        setCourseDetailsModal(false)
+        setVideoModal(!videoModal)
+    }
 
 
 
@@ -131,12 +150,12 @@ const CourseTable = () => {
 
 
     return (
-        <div className="bg-[#FFFFFF] shadow shadow-[#00000033] py-9 px-7 rounded-[14.13px]">
+        <div className="bg-[#FFFFFF] shadow shadow-[#00000033] py-9 px-7 rounded-[14.13px] overflow-x-auto ">
             {/* Header */}
             <div className="flex justify-between items-center">
                 <h1 className="font-medium text-3xl">All Courses</h1>
                 <Link to={`/dashboard/course-create`}>
-                    <button className="flex items-center gap-2 px-6 py-3 rounded-full text-black font-medium text-lg bg-gradient-to-b from-[#FFD700] to-[#E6BE00] hover:opacity-90 transition duration-200 shadow-sm">
+                    <button className="flex items-center gap-2 px-6 py-3 rounded-full text-black font-medium text-lg bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] hover:opacity-90 transition duration-200 shadow-sm">
                         <Plus size={22} strokeWidth={2.5} /> Create Course
                     </button>
                 </Link>
@@ -158,7 +177,7 @@ const CourseTable = () => {
             </div>
 
             {/* Table */}
-            <Card>
+            <Card className=" overflow-x-auto " >
                 <CardContent>
                     <Table>
                         <TableHeader>
@@ -180,19 +199,19 @@ const CourseTable = () => {
                                             className="w-16 h-10 object-cover rounded-md"
                                         />
                                     </TableCell>
-                                    <TableCell className="font-medium">{course.title.slice(0, 30)}....</TableCell>
+                                    <TableCell className="font-medium  ">{course.title.slice(0, 30)}....</TableCell>
                                     <TableCell className="text-[#989898]">{course.description.slice(0, 30)}....</TableCell>
                                     <TableCell>
-                                        <Badge className={course.is_published === 1 ? "bg-[#EAF6EC] text-[#238B39] px-4 py-1 rounded-[26px] text-sm" : "bg-[#F6F5EA] text-[#8B7B23] px-4 py-1 rounded-[26px] text-sm"}>
+                                        <Badge className={course.is_published == true ? "bg-[#EAF6EC] text-[#238B39] px-4 py-1 rounded-[26px] text-sm" : "bg-[#F6F5EA] text-[#8B7B23] px-4 py-1 rounded-[26px] text-sm"}>
                                             {
-                                                course.is_published === 1 ? "Publish" : "Unpublish"
+                                                course.is_published == true ? "Publish" : "Unpublish"
                                             }
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-right space-x-2">
                                         <Link to={`/dashboard/add-leason/${course.id}`}>
                                             <Button
-                                                className="rounded-[33px] px-3 py-1.5 bg-gradient-to-b from-[#FFD700] to-[#E6BE00] hover:opacity-90 transition duration-200 shadow-sm text-black"
+                                                className="rounded-[33px] px-3 py-1.5 bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] hover:opacity-90 transition duration-200 shadow-sm text-black"
 
 
                                             >
@@ -207,11 +226,7 @@ const CourseTable = () => {
                                         </Button>
                                         <Button onClick={() => { handleDelete(course.id) }} className="border border-[#989898] px-2 py-1 bg-white">
                                             {
-                                                deleteLoading ? <>
-                                                    <div className=" flex justify-center " >
-                                                        <Spinner />
-                                                    </div>
-                                                </> : <FaTrashAlt color="#B9B9B9" />
+                                                <FaTrashAlt color="#B9B9B9" />
                                             }
                                         </Button>
                                         <Button onClick={() => { handleCourseDetails(course.id) }} className="border border-[#989898] px-2 py-1 bg-white">
@@ -259,41 +274,51 @@ const CourseTable = () => {
 
             {/* Update Course Modal */}
             <Dialog open={openUpdateModal} onOpenChange={setOpenUpdateModal}>
-                <CourseUpdate selectedCourse={selectedCourse} setOpenUpdateModal={setOpenUpdateModal} />
+                {selectedCourse && (
+                    <CourseUpdate
+                        selectedCourse={selectedCourse}
+                        setOpenUpdateModal={setOpenUpdateModal}
+                    />
+                )}
             </Dialog>
 
             {/* course details modal  */}
             <Dialog open={courseDetailsModl} onOpenChange={setCourseDetailsModal} >
 
-                <DialogContent className="max-w-3xl  ">
-                    <DialogHeader>
+                <DialogContent className="max-w-3xl overflow-y-auto max-h-[90vh]   ">
+                    <div>
                         <DialogTitle>{courseTitle?.title} Course Lessons</DialogTitle>
-                        <div>
-                            <h1>Instructor Name : {courseTitle?.instructor}</h1>
-                            <h1>Price : {courseTitle?.price}</h1>
-                            <h1>Reward Points : {courseTitle?.reward_points}</h1>
-                            <h1>Course Duraction: {courseTitle?.duration}</h1>
-                            <h1>Total Lesson : {courseTitle?.total_lessons}</h1>
+                        <div className=" flex items-center justify-between " >
+                            <div className=" " >
+                                <h1>Instructor Name : {courseTitle?.instructor}</h1>
+                                <h1>Price : {courseTitle?.price}</h1>
+                                <h1>Reward Points : {courseTitle?.reward_points}</h1>
+                                <h1>Course Duraction: {courseTitle?.duration}</h1>
+                                <h1>Total Lesson : {courseTitle?.total_lessons}</h1>
+                            </div>
+                            <div>
+                                <img
+                                    src={courseTitle?.thumbnail}
+                                    alt={courseTitle?.title}
+                                    className="w-full  h-36 object-cover rounded-md"
+                                />
+                            </div>
                         </div>
-                        <DialogDescription>
-                            Anyone who has this link will be able to view this.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="flex items-center gap-2 ">
                         <div>
-                            {/* =================== HEADER =================== */}
-
-
-                            {/* =================== LESSON LIST =================== */}
+                            {/* Anyone who has this link will be able to view this. */}
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2 -mt-30 ">
+                        <div>
                             {lessonData.map((item, index) => (
                                 <div key={item.id} className="mt-6">
-                                    <div className=" max-w-3xl   px-6 py-3 rounded-[38px] border border-[#989898] ">
+                                    <div className=" max-w-3xl   px-6 py-3 rounded-[38px] border border-[#989898]">
                                         {/* LEFT */}
                                         <div className="flex items-center gap-x-6  w-full  ">
                                             {/* ▶ Play icon */}
                                             <div
-                                                className="cursor-pointer"
-                                            // onClick={() => handlePlay(item.video_url)}
+                                                className="cursor-pointer text-2xl "
+                                                onClick={() => handlePlay(item.video_url)}
                                             >
                                                 ▶
                                             </div>
@@ -328,6 +353,60 @@ const CourseTable = () => {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+
+            {/* video play modal  */}
+
+
+            {
+                videoModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
+
+                        {/* Modal Card */}
+                        <div className="bg-white w-full max-w-4xl rounded-2xl p-6 relative animate-in fade-in zoom-in duration-200">
+
+                            {/* Close Button */}
+                            <button
+                                onClick={() => setVideoModal(false)}
+                                className="absolute  z-50 top-4 cursor-pointer right-4 text-gray-900 hover:text-gray-600 text-xl"
+                            >
+                                ✕
+                            </button>
+                            <MediaController
+                                style={{
+                                    width: "98%",
+                                    aspectRatio: "16/9",
+                                }}
+                            >
+                                <ReactPlayer
+                                    slot="media"
+                                    src={`${videoUrl}`}
+                                    controls={false}
+                                    style={{
+                                        width: "100%",
+                                        height: "100%",
+                                        // "--controls": "none",
+                                    }}
+                                ></ReactPlayer>
+                                <MediaControlBar>
+                                    <MediaPlayButton />
+                                    <MediaSeekBackwardButton seekOffset={10} />
+                                    <MediaSeekForwardButton seekOffset={10} />
+                                    <MediaTimeRange />
+                                    <MediaTimeDisplay showDuration />
+                                    <MediaMuteButton />
+                                    <MediaVolumeRange />
+                                    <MediaPlaybackRateButton />
+                                    <MediaFullscreenButton />
+                                </MediaControlBar>
+                            </MediaController>
+
+
+
+                        </div>
+                    </div>
+                )
+            }
 
         </div>
     );

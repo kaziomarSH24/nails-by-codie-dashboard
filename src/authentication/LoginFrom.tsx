@@ -40,13 +40,11 @@ const LoginFrom = () => {
             };
 
             toast.error(error.data?.message || "Something went wrong ❌");
-            console.log(err);
         }
     };
 
     useEffect(() => {
         const token = localStorage.getItem("token");
-        console.log(token)
         if (token) {
             window.location.href = "/dashboard"
         }

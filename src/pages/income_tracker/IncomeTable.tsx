@@ -151,7 +151,7 @@ const IncomeTable = () => {
                                         setCurrentPage(1);
                                         setFilterModal(false);
                                     }}
-                                    className="bg-yellow-400 px-6 py-2 rounded"
+                                    className="bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] px-6 py-2 rounded"
                                 >
                                     Apply
                                 </button>
@@ -183,7 +183,7 @@ const IncomeTable = () => {
                                     <td className="py-3 px-4 border-b">{t.amount}</td>
                                     <td className="py-3 px-4 border-b">
                                         <span
-                                            className={`px-3 py-1 rounded-[4px] text-xs  ${t.status === "Completed"
+                                            className={`px-3 py-1 rounded-[4px] text-xs  ${t.status === "Success"
                                                 ? " bg-[#EAF6EC] text-[#24983F]  "
                                                 : t.status === "Pending"
                                                     ? "bg-yellow-100 text-yellow-700"
@@ -248,7 +248,7 @@ const IncomeTable = () => {
                                 onClick={() => setCurrentPage(page)}
                                 className={`px-3 py-1 rounded border text-sm transition
           ${currentPage === page
-                                        ? "bg-[#FFD700] border-[#FFD700] text-black font-medium"
+                                        ? " bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] text-black font-medium"
                                         : "border-gray-300 hover:bg-gray-100"
                                     }
         `}

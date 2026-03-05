@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import {
     // Menu,
     // X,
@@ -22,7 +22,6 @@ const Layout = () => {
     const location = useLocation();
     const pathName = location.pathname;
 
-    console.log(pathName)
 
     const [adminLogout] = useAdminLogoutMutation();
 
@@ -36,7 +35,6 @@ const Layout = () => {
 
                 if (res) {
                     localStorage.clear();
-                    console.log(res);
                     window.location.href = "/";
                     toast.success(res?.message);
                 }
@@ -62,7 +60,6 @@ const Layout = () => {
 
     useEffect(() => {
         const token = localStorage.getItem("token");
-        console.log(token)
         if (!token) {
             window.location.href = "/"
         }
@@ -80,9 +77,9 @@ const Layout = () => {
             >
                 {/* Logo + Toggle */}
                 <div className="flex items-center justify-between p-4 mt-4">
-                    <span className={`${sidebarOpen ? "block" : "hidden"}`}>
+                    <Link to={"/dashboard"}><span className={`${sidebarOpen ? "block" : "hidden"}`}>
                         <img src="/images/logo/logo.svg" alt="Logo" />
-                    </span>
+                    </span></Link>
                     <button
                         onClick={() => setSidebarOpen(!sidebarOpen)}
                         className="text-gray-700 p-1 rounded 
@@ -427,7 +424,7 @@ const Layout = () => {
 
 
                         {/* Notification*/}
-                        {/* <li>
+                        <li>
                             <NavLink
                                 to="/dashboard/notification"
                                 className={`flex items-center gap-7 ${pathName == "/dashboard/notification" ? " bg-[#E9E9E9] " : ""}  px-4 py-3 rounded-[44px] transition `}
@@ -484,7 +481,7 @@ const Layout = () => {
                                     : ""
                                     }`} >Notification</span>}
                             </NavLink>
-                        </li> */}
+                        </li>
 
 
                         {/* Rewards System*/}

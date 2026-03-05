@@ -8,7 +8,7 @@ export const userApi = baseApi.injectEndpoints({
             query: () => ({
                 url: `/admin/users`,
             }),
-            providesTags: ["Stock"]
+            providesTags: ["Stock", "Auth"]
         }),
 
 
@@ -16,7 +16,15 @@ export const userApi = baseApi.injectEndpoints({
             query: (id) => ({
                 url: `/admin/users/${id}`,
                 method: "GET"
-            })
+            }),
+            providesTags: ["Auth"]
+        }),
+        userBand: builder.mutation({
+            query: (id) => ({
+                url: `/admin/users/${id}/toggle-suspend`,
+                method: "PUT"
+            }),
+            invalidatesTags: ["Auth"]
         })
 
 
@@ -25,4 +33,4 @@ export const userApi = baseApi.injectEndpoints({
     }),
 })
 
-export const { useAllUsersQuery, useUserDetailsQuery } = userApi
+export const { useAllUsersQuery, useUserDetailsQuery, useUserBandMutation } = userApi

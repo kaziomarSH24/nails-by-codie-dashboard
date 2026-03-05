@@ -13,18 +13,27 @@ import { Textarea } from "../../components/ui/textarea";
 import { Button } from "../../components/ui/button";
 import { Spinner } from "../../components/ui/spinner";
 
-interface CourseUpdateProps {
+// Define Course type
+export interface Course {
     id: number;
     thumbnail: string;
     title: string;
     description: string;
     price: string;
-    is_published: number;
+    is_published: boolean;
     reward_points: string;
+}
+
+// Define props interface
+interface CourseUpdateProps {
+    selectedCourse: Course; // single course object
     setOpenUpdateModal: (open: boolean) => void;
 }
 
 const CourseUpdate = ({ selectedCourse, setOpenUpdateModal }: CourseUpdateProps) => {
+
+
+
     // Form state
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -33,7 +42,7 @@ const CourseUpdate = ({ selectedCourse, setOpenUpdateModal }: CourseUpdateProps)
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState("");
 
-    // Mutation
+    // Mutation hook
     const [courseUpdate, { isLoading: updateLoading }] = useCourseUpdateMutation();
 
     // Initialize form with selected course data
@@ -161,7 +170,7 @@ const CourseUpdate = ({ selectedCourse, setOpenUpdateModal }: CourseUpdateProps)
 
                 <DialogFooter>
                     <Button
-                        className="bg-yellow-600 hover:bg-yellow-700"
+                        className="bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87]"
                         onClick={handleUpdateCourse}
                         disabled={updateLoading}
                     >

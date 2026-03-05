@@ -15,8 +15,8 @@ export type CourseType = {
     description: string;
     thumbnail: string; // URL as string
     price: string; // string because your JSON shows "49.99" as string
-    reward_points: number;
-    is_published: 0 | 1; // 0 for draft, 1 for published
+    reward_points: string;
+    is_published: boolean; // 0 for draft, 1 for published
     duration: string; // e.g., "5 hours"
     created_at: string; // ISO datetime string
     updated_at: string; // ISO datetime string

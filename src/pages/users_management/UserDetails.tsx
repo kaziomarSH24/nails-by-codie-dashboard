@@ -1,13 +1,35 @@
-import { useUserDetailsQuery } from '../../api/user-api/userApi'
+import { toast } from 'sonner';
+import { useUserBandMutation, useUserDetailsQuery } from '../../api/user-api/userApi'
 import { Spinner } from '../../components/ui/spinner';
-import type { UserDetails } from '../../lib/type/authType';
+import type { UserDetailsType } from '../../lib/type/authType';
 import type { Appointment, Enrollment } from '../../lib/type/userType';
+import { errorMessage } from './../../lib/error/errorMsg';
 
 const UserDetails = ({ id }: { id: number }) => {
-    const { data, isLoading } = useUserDetailsQuery(id);
-    const userDetails: UserDetails = data?.data;
+    const { data, isLoading, refetch } = useUserDetailsQuery(id);
+    const userDetails: UserDetailsType = data?.data;
     const courseEnroll: Enrollment[] = data?.data?.enrollments || [];
     const appointment: Appointment[] = data?.data?.appointments || [];
+
+    // ============================ user suspense api =============================
+
+    const [userBand,] = useUserBandMutation();
+
+    const handleSuspenseUser = async () => {
+
+
+        try {
+            const res = await userBand(id).unwrap();
+            if (res) {
+                toast.success(res?.message)
+                refetch()
+            }
+
+        } catch (error) {
+            return errorMessage(error)
+        }
+    }
+
     return (
         <div>
             {
@@ -92,8 +114,8 @@ const UserDetails = ({ id }: { id: number }) => {
                         </div>
 
 
-                        <div className=" mt-12 flex justify-end " >
-                            <button className=" border border-[#E32C2C] text-[#E32C2C] text-xs rounded-[6px] p-2.5 " >Syspend User</button>
+                        <div onClick={handleSuspenseUser} className=" mt-12 flex justify-end " >
+                            <button className=" border border-[#E32C2C] text-[#E32C2C] text-xs rounded-[6px] p-2.5 " > {userDetails?.is_suspended == 1 ? "UnSyspend User" : "Syspend User"} </button>
                         </div>
 
 

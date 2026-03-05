@@ -9,6 +9,14 @@ export const rewardApi = baseApi.injectEndpoints({
                 url: `/admin/reward-settings`,
                 method: "GET"
             })
+        }),
+        rewardClim: builder.mutation({
+            query: (payload) => ({
+                url: `/admin/reward-settings`,
+                method: "POST",
+                body: payload
+            }),
+            invalidatesTags: ["Reward"]
         })
 
 
@@ -16,4 +24,4 @@ export const rewardApi = baseApi.injectEndpoints({
     }),
 })
 
-export const { useAllRewardQuery } = rewardApi;
+export const { useAllRewardQuery, useRewardClimMutation } = rewardApi;

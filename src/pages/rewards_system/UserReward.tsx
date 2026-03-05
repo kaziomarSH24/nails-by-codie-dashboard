@@ -96,7 +96,7 @@ const UserReward = () => {
                             key={i}
                             onClick={() => setCurrentPage(i + 1)}
                             className={`px-3 py-2 text-sm rounded-md border ${currentPage === i + 1
-                                ? "bg-yellow-400 text-white border-yellow-400"
+                                ? "bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] text-black "
                                 : "text-gray-700 border-gray-300 hover:bg-gray-100"
                                 }`}
                         >
