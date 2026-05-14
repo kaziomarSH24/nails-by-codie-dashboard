@@ -20,10 +20,15 @@ import ContactInfo from '../pages/setting/ContactInfo';
 import AddNewCourse from '../pages/courses_management/AddCourse';
 import { AddLeason } from './../pages/courses_management/AddLeason';
 import Support from '../pages/support/Support';
+import AppTermCondiction from '../pages/app-setting/TermCondiction';
 
 
 
 export const router = createBrowserRouter([
+    {
+        path : "/term-condiction",
+        element : React.createElement(AppTermCondiction)
+    },
     {
         path: "/",
         element: React.createElement(LoginFrom)

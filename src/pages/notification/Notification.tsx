@@ -20,7 +20,6 @@ const NotificationComponent: React.FC = () => {
 
     const {
         data,
-        isLoading,
         refetch
     } = useAllNotificationQuery({
         page,
