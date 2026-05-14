@@ -20,14 +20,11 @@ ENV IMG_URL=$IMG_URL
 ARG VITE_YOUTUBE_API_KEY
 ENV VITE_YOUTUBE_API_KEY=$VITE_YOUTUBE_API_KEY
 RUN npm run build 
-# Note: If you are using Vite, the output folder is usually 'dist'. 
-# If using Create React App, it is 'build'.
 
 # Stage 2: Serve the application using Nginx
 FROM nginx:alpine
 
-# Copy the built static files from the builder stage to Nginx serve directory
-# Change '/app/dist' to '/app/build' if you are using Create React App
+
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Expose port 80 for internal Docker network communication
