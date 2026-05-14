@@ -9,6 +9,16 @@ RUN npm ci
 
 # Copy all source files and build the project
 COPY . .
+
+# Declare Build Arguments and Environment Variables
+ARG VITE_BASE_URL
+ENV VITE_BASE_URL=$VITE_BASE_URL
+
+ARG IMG_URL
+ENV IMG_URL=$IMG_URL
+
+ARG VITE_YOUTUBE_API_KEY
+ENV VITE_YOUTUBE_API_KEY=$VITE_YOUTUBE_API_KEY
 RUN npm run build 
 # Note: If you are using Vite, the output folder is usually 'dist'. 
 # If using Create React App, it is 'build'.
