@@ -574,6 +574,18 @@ const Layout = () => {
                                     </li>
                                     <li>
                                         <NavLink
+                                            to="/dashboard/settings/privacy-policy"
+                                            className={`block px-4 py-2 rounded transition 
+                                            ${pathName === "/dashboard/settings/privacy-policy"
+                                                    ? "bg-[#E9E9E9] text-transparent bg-gradient-to-r from-[#F2DA87] via-[#91741A] to-[#F2DA87] bg-clip-text"
+                                                    : "text-[#989898]"
+                                                }`}
+                                        >
+                                            Privacy Policy
+                                        </NavLink>
+                                    </li>
+                                    <li>
+                                        <NavLink
                                             to="/dashboard/settings/faq"
                                             className={`block px-4 py-2 rounded transition 
                                             ${pathName === "/dashboard/settings/faq"
