@@ -46,3 +46,4 @@ jobs:
             docker compose pull nails-frontend
             docker compose up -d --no-deps nails-frontend
             docker image prune -f
+            
