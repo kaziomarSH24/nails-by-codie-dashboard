@@ -35,7 +35,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            VITE_API_BASE_URL=${{ secrets.VITE_BASE_URL }}
+            VITE_BASE_URL=${{ secrets.VITE_BASE_URL }}
             VITE_YOUTUBE_API_KEY=${{ secrets.VITE_YOUTUBE_API_KEY }}
             VITE_IMG_URL=${{ secrets.VITE_IMG_URL }}
             IMG_URL=${{ secrets.IMG_URL }}
