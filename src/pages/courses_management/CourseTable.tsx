@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Badge } from "../../components/ui/badge";
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogTitle } from "../../components/ui/dialog";
 import { Link } from "react-router-dom";
-import { useAllCourseQuery, useDeleteCourseMutation } from "../../api/course-api/courseApi";
+import { useAllCourseQuery, useDeleteCourseMutation, usePublishUnPublishCourseMutation } from "../../api/course-api/courseApi";
 import type { CourseType } from "../../lib/type/courseType";
 import { FaEdit, FaTrashAlt } from "react-icons/fa";
 import { errorMessage } from "../../lib/error/errorMsg";
@@ -134,6 +134,23 @@ const CourseTable = () => {
         setVideoModal(!videoModal)
     }
 
+    // =========================================== Course Publish Unpublish ========================================
+
+    const [publishUnPublishCourse] = usePublishUnPublishCourseMutation();
+
+
+    const handlePublishCourse = async (courseId: number, publishNumber: number) => {
+        try {
+            const res = await publishUnPublishCourse({ courseId, publishNumber }).unwrap();
+            if (res) {
+                toast.success(res?.message);
+            }
+
+        } catch (error) {
+            return errorMessage(error)
+        }
+    }
+
 
 
 
@@ -218,6 +235,23 @@ const CourseTable = () => {
                                                 Add Lesson
                                             </Button>
                                         </Link>
+                                        {
+                                            course?.is_published == true ? <> <Button
+                                                onClick={() => handlePublishCourse(course?.id, 0)}
+                                                className="rounded-[33px] px-3 py-1.5 bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] hover:opacity-90 transition duration-200 shadow-sm text-black">
+                                                Unpublish
+                                            </Button> </> : <> <Button
+                                                onClick={() => handlePublishCourse(course?.id, 1)}
+                                                className="rounded-[33px] px-3 py-1.5 bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] hover:opacity-90 transition duration-200 shadow-sm text-black"
+
+
+                                            >
+
+                                                Publish
+
+
+                                            </Button>  </>
+                                        }
                                         <Button
                                             className="border border-[#989898] px-2 py-1 bg-white"
                                             onClick={() => { setSelectedCourse(course); setOpenUpdateModal(true); }}
@@ -285,7 +319,7 @@ const CourseTable = () => {
             {/* course details modal  */}
             <Dialog open={courseDetailsModl} onOpenChange={setCourseDetailsModal} >
 
-                <DialogContent className="max-w-3xl overflow-y-auto max-h-[90vh]   ">
+                <DialogContent className="max-w-3xl overflow-y-auto max-h-[90vh] bg-slate-100  ">
                     <div>
                         <DialogTitle>{courseTitle?.title} Course Lessons</DialogTitle>
                         <div className=" flex items-center justify-between " >

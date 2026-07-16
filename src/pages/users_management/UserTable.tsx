@@ -105,53 +105,65 @@ const UserTable = () => {
 
                     <tbody>
                         {paginatedUsers.map((user) => (
-                            <tr key={user.id} className="border-b text-xs hover:bg-gray-50">
+                            <tr key={user.id} className="text-xs hover:bg-gray-50 border-b border-gray-100 transition-colors">
+                                {/* User Profile */}
                                 <td className="px-4 py-2 flex items-center gap-2">
-                                    <img src={user?.avatar ? user?.avatar : "/images/logo/user.png"} alt="" />
-                                    {user.name}
+                                    <img
+                                        src={user?.avatar || "/images/logo/user.png"}
+                                        alt={user?.name || "User Avatar"}
+                                        className="w-7 h-7 rounded-full object-cover"
+                                    />
+                                    <span className="font-medium text-gray-900">{user.name}</span>
                                 </td>
 
-                                <td className="px-4 py-2 text-center">{user.email}</td>
-                                <td className="px-4 py-2 text-center">{user.phone}</td>
+                                {/* Metadata Columns */}
+                                <td className="px-4 py-2 text-center text-gray-600">{user.email}</td>
+                                <td className="px-4 py-2 text-center text-gray-600">{user.phone}</td>
 
+                                {/* Status Badge */}
                                 <td className="px-4 py-2 text-center">
                                     <span
-                                        className={`px-3 py-1 rounded text-xs ${user.status === "active"
-                                            ? "bg-[#EAF6EC] text-[#24983F]"
-                                            : user.status === "inactive"
-                                                ? "bg-[#F5F6EA] text-[#988E24]"
-                                                : "bg-[#F6EAEA] text-[#982424]"
+                                        className={`inline-block px-3 py-1 rounded text-xs font-medium capitalize ${user.status === "active"
+                                                ? "bg-[#EAF6EC] text-[#24983F]"
+                                                : user.status === "inactive"
+                                                    ? "bg-[#F5F6EA] text-[#988E24]"
+                                                    : "bg-[#F6EAEA] text-[#982424]"
                                             }`}
                                     >
                                         {user.status}
                                     </span>
                                 </td>
 
-                                <td className="px-4  flex justify-center  gap-x-2   ">
-                                    <Dialog>
-                                        <DialogTrigger asChild>
-                                            <Button
-                                                variant="outline"
-                                                onClick={() => setId(user?.id)}
-                                            >
-                                                View
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent className="max-w-4xl">
-                                            {id && <UserDetails id={id} />}
-                                        </DialogContent>
-                                    </Dialog>
+                                {/* Fixed Actions Structure Layout */}
+                                <td className="px-4 py-2 text-center">
+                                    <div className="flex justify-center items-center gap-x-2">
+                                        <Dialog>
+                                            <DialogTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setId(user?.id)}
+                                                >
+                                                    View
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent className="max-w-4xl bg-slate-50 ">
+                                                {id && <UserDetails id={id} />}
+                                            </DialogContent>
+                                        </Dialog>
 
-                                    <Button variant="outline">
-                                        <RefreshCw size={16} />
-                                    </Button>
+                                        <Button variant="outline" size="sm">
+                                            <RefreshCw size={14} />
+                                        </Button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}
 
+                        {/* Empty State Handler */}
                         {paginatedUsers.length === 0 && (
                             <tr>
-                                <td colSpan={5} className="py-6 text-center text-gray-500">
+                                <td colSpan={5} className="py-8 text-center text-gray-400 font-medium">
                                     No users found
                                 </td>
                             </tr>

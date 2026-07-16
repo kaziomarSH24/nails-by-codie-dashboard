@@ -90,7 +90,7 @@ const IncomeTable = () => {
 
                 {/* Filter Modal */}
                 <Dialog open={filterModal} onOpenChange={setFilterModal}>
-                    <DialogContent className="max-w-md">
+                    <DialogContent className="max-w-md bg-slate-50 ">
                         <DialogHeader>
                             <DialogTitle>Filter</DialogTitle>
                         </DialogHeader>
@@ -193,9 +193,9 @@ const IncomeTable = () => {
                                             {t.status}
                                         </span>
                                     </td>
-                                    <td className="py-3 px-4 border-b text-center">
-                                        <Dialog>
-                                            <DialogTrigger asChild>
+                                    <td className="py-3 px-4 border-b text-center ">
+                                        <Dialog  >
+                                            <DialogTrigger asChild className=" bg-slate-150 " >
                                                 <button
                                                     onClick={() => setViewData(t.id)}
                                                     className=" "
@@ -206,11 +206,11 @@ const IncomeTable = () => {
                                                     </svg>
                                                 </button>
                                             </DialogTrigger>
-                                            <DialogContent>
+                                            <DialogContent className=" bg-slate-50" >
                                                 <DialogHeader>
-                                                    <DialogTitle className="text-lg font-semibold">
+                                                    {/* <DialogTitle className="text-lg font-semibold ">
                                                         Transaction Details
-                                                    </DialogTitle>
+                                                    </DialogTitle> */}
                                                 </DialogHeader>
                                                 {viewData && (
                                                     <TransactionDetails viewId={viewData} />

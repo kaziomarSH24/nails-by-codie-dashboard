@@ -65,7 +65,7 @@ const StockOverview = () => {
                                                     width={60}
                                                     height={60}
                                                     alt={item.title}
-                                                    className="rounded"
+                                                    className="rounded h-14 "
                                                 />
                                             </td>
 
