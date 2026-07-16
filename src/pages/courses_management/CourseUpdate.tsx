@@ -96,7 +96,7 @@ const CourseUpdate = ({ selectedCourse, setOpenUpdateModal }: CourseUpdateProps)
 
     return (
         <div>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-lg bg-slate-100 ">
                 <DialogHeader>
                     <DialogTitle>
                         Update Course {selectedCourse ? `(${selectedCourse.title})` : ""}
