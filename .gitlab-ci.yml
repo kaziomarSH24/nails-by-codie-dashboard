@@ -43,3 +43,4 @@ deploy_to_server:
     - ssh $SERVER_USER@$SERVER_IP "cd $SERVER_DEPLOY_PATH && docker compose pull nails-frontend"
     - ssh $SERVER_USER@$SERVER_IP "cd $SERVER_DEPLOY_PATH && docker compose up -d --no-deps nails-frontend"
     - ssh $SERVER_USER@$SERVER_IP "docker image prune -f"
+
