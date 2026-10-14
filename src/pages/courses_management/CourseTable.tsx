@@ -383,14 +383,14 @@ const CourseTable = () => {
                                         {/* Actions */}
                                         <TableCell className="py-4 pr-5 text-right">
                                             <div className="flex items-center justify-end gap-2">
-                                                {/* Add Lesson Button */}
+                                                {/* Manage Lessons Button */}
                                                 <Link to={`/dashboard/add-leason/${course.id}`}>
                                                     <button
-                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] text-black hover:opacity-90 transition shadow-sm"
-                                                        title="Add or manage lessons"
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500 hover:bg-amber-600 text-white shadow-xs transition"
+                                                        title="Manage lessons & curriculum"
                                                     >
-                                                        <Plus size={13} strokeWidth={2.5} />
-                                                        <span>Add Lesson</span>
+                                                        <BookOpen size={13} />
+                                                        <span>Manage Lessons</span>
                                                     </button>
                                                 </Link>
 
@@ -398,7 +398,7 @@ const CourseTable = () => {
                                                 {course.is_published ? (
                                                     <button
                                                         onClick={() => handlePublishCourse(course.id, 0)}
-                                                        className="px-2.5 py-1.5 rounded-lg text-xs font-medium border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition"
+                                                        className="w-20 py-1.5 rounded-lg text-xs font-medium border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition text-center"
                                                         title="Unpublish course"
                                                     >
                                                         Unpublish
@@ -406,7 +406,7 @@ const CourseTable = () => {
                                                 ) : (
                                                     <button
                                                         onClick={() => handlePublishCourse(course.id, 1)}
-                                                        className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition"
+                                                        className="w-20 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition text-center"
                                                         title="Publish course"
                                                     >
                                                         Publish
