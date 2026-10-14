@@ -3,7 +3,7 @@ export interface CourseFormData {
     description: string;
     reward_points: number;
     price: number;
-    duration: string;
+    duration?: string;
     thumbnail: FileList;
     instructor: string
 };

@@ -31,7 +31,6 @@ export default function AddNewCourse() {
         defaultValues: {
             reward_points: 100,
             price: 0,
-            duration: "9:30 AM",
         },
     });
 
@@ -126,51 +125,31 @@ export default function AddNewCourse() {
                         )}
                     </div>
 
-                    {/* Instructor & Reward */}
-                    <div className="mb-4 flex gap-x-4">
-                        <div className="w-full">
-                            <Label>Instructor *</Label>
-                            <Input
-                                {...register("instructor", {
-                                    required: "Instructor name is required",
-                                })}
-                                placeholder="Enter Instructor Name"
-                                className="w-full mt-2"
-                            />
-                            {errors.instructor && (
-                                <p className="text-red-500 text-sm mt-1">
-                                    {errors.instructor.message}
-                                </p>
-                            )}
-                        </div>
-
-                        <div className="w-full">
-                            <Label>Reward Point</Label>
-                            <Input
-                                type="number"
-                                {...register("reward_points", {
-                                    valueAsNumber: true,
-                                    min: {
-                                        value: 0,
-                                        message: "Reward point cannot be negative",
-                                    },
-                                })}
-                                className="w-full mt-2"
-                            />
-                            {errors.reward_points && (
-                                <p className="text-red-500 text-sm mt-1">
-                                    {errors.reward_points.message}
-                                </p>
-                            )}
-                        </div>
+                    {/* Instructor */}
+                    <div className="mb-4">
+                        <Label>Instructor *</Label>
+                        <Input
+                            {...register("instructor", {
+                                required: "Instructor name is required",
+                            })}
+                            placeholder="Enter Instructor Name"
+                            className="w-full mt-2"
+                        />
+                        {errors.instructor && (
+                            <p className="text-red-500 text-sm mt-1">
+                                {errors.instructor.message}
+                            </p>
+                        )}
                     </div>
 
-                    {/* Price & Duration */}
+                    {/* Price & Reward Point */}
                     <div className="flex gap-x-4 mb-4">
                         <div className="w-full">
-                            <Label>Price *</Label>
+                            <Label>Price (£) *</Label>
                             <Input
                                 type="number"
+                                step="0.01"
+                                min="0"
                                 {...register("price", {
                                     required: "Price is required",
                                     valueAsNumber: true,
@@ -179,7 +158,7 @@ export default function AddNewCourse() {
                                         message: "Price must be 0 or greater",
                                     },
                                 })}
-                                placeholder="£0.00"
+                                placeholder="0.00"
                                 className="w-full mt-2"
                             />
                             {errors.price && (
@@ -190,11 +169,25 @@ export default function AddNewCourse() {
                         </div>
 
                         <div className="w-full">
-                            <Label>Duration</Label>
+                            <Label>Reward Point</Label>
                             <Input
-                                {...register("duration")}
+                                type="number"
+                                min="0"
+                                {...register("reward_points", {
+                                    valueAsNumber: true,
+                                    min: {
+                                        value: 0,
+                                        message: "Reward point cannot be negative",
+                                    },
+                                })}
+                                placeholder="100"
                                 className="w-full mt-2"
                             />
+                            {errors.reward_points && (
+                                <p className="text-red-500 text-sm mt-1">
+                                    {errors.reward_points.message}
+                                </p>
+                            )}
                         </div>
                     </div>
 
