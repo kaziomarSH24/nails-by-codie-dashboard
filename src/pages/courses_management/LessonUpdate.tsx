@@ -52,7 +52,6 @@ export const LessonUpdate = ({ lessonId, courseId, setUpdateModal }: LessonUpdat
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [sectionName, setSectionName] = useState("General");
-    const [lessonType, setLessonType] = useState<"video" | "image">("video");
     const [isFreePreview, setIsFreePreview] = useState(false);
 
     // Video states
@@ -96,7 +95,6 @@ export const LessonUpdate = ({ lessonId, courseId, setUpdateModal }: LessonUpdat
             setTitle(data.title ?? "");
             setDescription(data.description ?? "");
             setSectionName(data.section_name ?? "General");
-            setLessonType((data.lesson_type as "video" | "image") ?? (data.image_path ? "image" : "video"));
             setIsFreePreview(Boolean(data.is_free_preview));
 
             // Populate video data
@@ -298,14 +296,27 @@ export const LessonUpdate = ({ lessonId, courseId, setUpdateModal }: LessonUpdat
             return;
         }
 
+        const hasVideo =
+            (videoOption === "upload" && Boolean(videoPath || preview || singleLesson?.data?.video_path)) ||
+            (videoOption === "url" && Boolean(videoUrlInput.trim()));
+        const hasImage = Boolean(imageFile || imagePreview || singleLesson?.data?.image_path);
+        const hasText = Boolean(description && description.trim().length > 0);
+
+        if (!hasVideo && !hasImage && !hasText) {
+            toast.error("Please provide at least a video, an image, or lesson content.");
+            return;
+        }
+
+        const calculatedLessonType = hasVideo ? "video" : (hasImage ? "image" : "article");
+
         const formData = new FormData();
         formData.append("title", title.trim());
         formData.append("description", description);
         formData.append("section_name", sectionName.trim() || "General");
-        formData.append("lesson_type", lessonType);
+        formData.append("lesson_type", calculatedLessonType);
         formData.append("is_free_preview", isFreePreview ? "1" : "0");
 
-        if (lessonType === "video") {
+        if (hasVideo) {
             formData.append("video_type", videoOption);
             if (videoOption === "upload") {
                 if (videoPath) {
@@ -314,7 +325,7 @@ export const LessonUpdate = ({ lessonId, courseId, setUpdateModal }: LessonUpdat
                     if (uploadSize) {
                         formData.append("duration", String(Math.ceil(uploadSize)));
                     }
-                } else if (singleLesson?.data?.video_path) {
+                } else if (preview && singleLesson?.data?.video_path) {
                     // Keep existing video path
                     formData.append("video_path", singleLesson.data.video_path);
                     if (singleLesson.data.duration) {
@@ -330,11 +341,10 @@ export const LessonUpdate = ({ lessonId, courseId, setUpdateModal }: LessonUpdat
                 }
             }
         } else {
-            // Article / Image Lesson
             formData.append("duration", "0");
         }
 
-        // Image handling (supported for both video and article lessons)
+        // Image handling (supported alongside video)
         if (imageFile) {
             formData.append("image", imageFile);
         } else if (imagePreview && singleLesson?.data?.image_path) {
@@ -442,72 +452,32 @@ export const LessonUpdate = ({ lessonId, courseId, setUpdateModal }: LessonUpdat
                     />
                 </div>
 
-                {/* 4. Lesson Format (Video vs Image) */}
-                <div className="mb-6">
-                    <label className="block text-base font-semibold text-gray-700 mb-2">
-                        Lesson Format
-                    </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div
-                            onClick={() => setLessonType("video")}
-                            className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                                lessonType === "video"
-                                    ? "border-amber-500 bg-amber-50/60 shadow-sm"
-                                    : "border-gray-200 bg-gray-50 hover:bg-gray-100/70"
-                            }`}
-                        >
-                            <div
-                                className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                                    lessonType === "video"
-                                        ? "bg-amber-500 text-white"
-                                        : "bg-gray-200 text-gray-600"
-                                }`}
-                            >
-                                <Video size={24} />
-                            </div>
-                            <div>
-                                <h4 className="font-semibold text-gray-900">Video Lesson</h4>
-                                <p className="text-xs text-gray-500 mt-0.5">
-                                    Upload video file (.MOV, .MP4) or YouTube link
-                                </p>
-                            </div>
+                {/* 4. Lesson Video Section (Optional) */}
+                <div className="mb-6 p-5 border rounded-xl bg-gray-50/50">
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                            <Video className="w-5 h-5 text-amber-600" />
+                            <label className="text-base font-semibold text-gray-800">
+                                Lesson Video (Optional)
+                            </label>
                         </div>
-
-                        <div
-                            onClick={() => setLessonType("image")}
-                            className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                                lessonType === "image"
-                                    ? "border-amber-500 bg-amber-50/60 shadow-sm"
-                                    : "border-gray-200 bg-gray-50 hover:bg-gray-100/70"
-                            }`}
-                        >
-                            <div
-                                className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                                    lessonType === "image"
-                                        ? "bg-amber-500 text-white"
-                                        : "bg-gray-200 text-gray-600"
-                                }`}
+                        {(preview || videoPath || videoUrlInput) && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setPreview(undefined);
+                                    setVideoPath("");
+                                    setVideoUrlInput("");
+                                    setIsUpload(false);
+                                    setProgress(0);
+                                    if (fileInputRef.current) fileInputRef.current.value = "";
+                                }}
+                                className="text-xs text-red-600 hover:text-red-700 font-medium hover:underline"
                             >
-                                <ImageIcon size={24} />
-                            </div>
-                            <div>
-                                <h4 className="font-semibold text-gray-900">
-                                    Article / Image Lesson
-                                </h4>
-                                <p className="text-xs text-gray-500 mt-0.5">
-                                    Text instructions with optional image (no video)
-                                </p>
-                            </div>
-                        </div>
+                                Remove / Clear Video
+                            </button>
+                        )}
                     </div>
-                </div>
-
-                {/* 5. Video Source Section (Only for Video Lessons) */}
-                {lessonType === "video" && (
-                    <div className="mb-6 p-5 border rounded-xl bg-gray-50/50">
-                        <label className="block text-base font-semibold text-gray-700 mb-3">
-                            Video Settings
-                        </label>
 
                         {/* Option Tabs */}
                         <div className="flex gap-4 mb-4">
@@ -634,19 +604,14 @@ export const LessonUpdate = ({ lessonId, courseId, setUpdateModal }: LessonUpdat
                             </div>
                         )}
                     </div>
-                )}
 
-                {/* 6. Lesson Graphic / Reference Image (Available for both Video and Article) */}
+                {/* 5. Lesson Graphic / Reference Image (Optional) */}
                 <div className="mb-6 p-5 border rounded-xl bg-gray-50/50">
                     <label className="block text-base font-semibold text-gray-700 mb-1">
-                        {lessonType === "video"
-                            ? "Attached Reference Graphic / Image (Optional)"
-                            : "Lesson Image / Diagram (Optional)"}
+                        Lesson Graphic / Reference Image (Optional)
                     </label>
                     <p className="text-xs text-gray-500 mb-3">
-                        {lessonType === "video"
-                            ? "Attach or replace an illustrative photo, nail art diagram, or step sheet to accompany this video lesson."
-                            : "Upload an illustrative image, infographics, or manual page for this article lesson."}
+                        Attach or replace an illustrative photo, nail art diagram, or step sheet to accompany this lesson.
                     </p>
 
                     {imagePreview ? (
@@ -669,9 +634,7 @@ export const LessonUpdate = ({ lessonId, courseId, setUpdateModal }: LessonUpdat
                         <label className="w-full h-36 border-2 border-dashed border-gray-300 hover:border-amber-400 rounded-xl flex flex-col items-center justify-center cursor-pointer bg-white transition">
                             <ImageIcon size={32} className="text-gray-400 mb-2" />
                             <p className="font-medium text-gray-700">
-                                {lessonType === "video"
-                                    ? "Click to attach reference image"
-                                    : "Click to upload lesson image"}
+                                Click to upload graphic / reference image
                             </p>
                             <p className="text-xs text-gray-400 mt-1">PNG, JPG, JPEG, WEBP up to 10MB</p>
                             <input

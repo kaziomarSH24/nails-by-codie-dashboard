@@ -156,9 +156,7 @@ const CourseTable = () => {
 
     const handleLessonPreview = (item: Lesson) => {
         setSelectedLesson(item);
-        if (item.lesson_type === "image" || (!item.video_url && item.image_url)) {
-            setImageModal(true);
-        } else if (item.video_url) {
+        if (item.video_url) {
             setVideoUrl(item.video_url);
             setVideoModal(true);
         } else {
@@ -592,7 +590,7 @@ const CourseTable = () => {
 
                                         <div className="p-3 space-y-2">
                                             {lessons.map((item, lIdx) => {
-                                                const isImage = item.lesson_type === "image" || Boolean(item.image_url && !item.video_url);
+                                                const isImage = !item.video_url;
                                                 return (
                                                     <div
                                                         key={item.id}

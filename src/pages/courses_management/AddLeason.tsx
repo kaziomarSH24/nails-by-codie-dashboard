@@ -54,9 +54,8 @@ export const AddLeason = () => {
         )
     );
 
-    // Section & Lesson Type state
+    // Section state
     const [sectionName, setSectionName] = useState<string>("Introduction");
-    const [lessonType, setLessonType] = useState<"video" | "image">("video");
     const [isFreePreview, setIsFreePreview] = useState<boolean>(false);
 
     // Video states
@@ -280,25 +279,25 @@ export const AddLeason = () => {
 
     // -------------------- Submit Handler --------------------
     const onSubmit = async (data: FormValues) => {
-        if (lessonType === "video") {
-            if (videoOption === "upload" && !videoPath) {
-                toast.error("Please upload a video file or wait for upload to finish.");
-                return;
-            }
-            if (videoOption === "url" && !data?.video_url) {
-                toast.error("Please enter a valid video link.");
-                return;
-            }
+        const hasVideo = (videoOption === "upload" && Boolean(videoPath)) || (videoOption === "url" && Boolean(data?.video_url && data.video_url.trim().length > 0));
+        const hasImage = Boolean(imageFile);
+        const hasText = Boolean(data.description && data.description.trim().length > 0);
+
+        if (!hasVideo && !hasImage && !hasText) {
+            toast.error("Please provide at least a video, an image, or lesson text content.");
+            return;
         }
 
+        const calculatedLessonType = hasVideo ? "video" : (hasImage ? "image" : "article");
+
         const formData = new FormData();
-        formData.append("title", data.title);
+        formData.append("title", data.title.trim());
         formData.append("description", data.description || "");
         formData.append("section_name", sectionName.trim() || "General");
-        formData.append("lesson_type", lessonType);
+        formData.append("lesson_type", calculatedLessonType);
         formData.append("is_free_preview", isFreePreview ? "1" : "0");
 
-        if (lessonType === "video") {
+        if (hasVideo) {
             if (videoOption === "upload") {
                 formData.append("video_type", "upload");
                 formData.append("video_path", videoPath);
@@ -307,17 +306,16 @@ export const AddLeason = () => {
                 }
             } else {
                 if (data?.video_url) {
-                    formData.append("video_url", data.video_url);
+                    formData.append("video_url", data.video_url.trim());
                     formData.append("video_type", "url");
                     formData.append("duration", String(videoMinutes * 60));
                 }
             }
         } else {
-            // Article / Image Lesson
             formData.append("duration", "0");
         }
 
-        // Attach image if uploaded (supported for both video and article lessons)
+        // Attach image if uploaded (supported alongside video)
         if (imageFile) {
             formData.append("image", imageFile);
         }
@@ -455,72 +453,31 @@ export const AddLeason = () => {
                             />
                         </div>
 
-                        {/* 4. Lesson Type Toggle (Video vs Article/Image) */}
-                        <div className="mb-6">
-                            <label className="block text-base font-semibold text-gray-700 mb-2">
-                                Lesson Format *
-                            </label>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div
-                                    onClick={() => setLessonType("video")}
-                                    className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                                        lessonType === "video"
-                                            ? "border-amber-500 bg-amber-50/60 shadow-sm"
-                                            : "border-gray-200 bg-gray-50 hover:bg-gray-100/70"
-                                    }`}
-                                >
-                                    <div
-                                        className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                                            lessonType === "video"
-                                                ? "bg-amber-500 text-white"
-                                                : "bg-gray-200 text-gray-600"
-                                        }`}
-                                    >
-                                        <Video size={24} />
-                                    </div>
-                                    <div>
-                                        <h4 className="font-semibold text-gray-900">Video Lesson</h4>
-                                        <p className="text-xs text-gray-500 mt-0.5">
-                                            Upload video file (.MOV, .MP4) or paste YouTube link
-                                        </p>
-                                    </div>
+                        {/* 4. Lesson Video Section (Optional) */}
+                        <div className="mb-6 p-5 border rounded-xl bg-gray-50/50">
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2">
+                                    <Video className="w-5 h-5 text-amber-600" />
+                                    <label className="text-base font-semibold text-gray-800">
+                                        Lesson Video (Optional)
+                                    </label>
                                 </div>
-
-                                <div
-                                    onClick={() => setLessonType("image")}
-                                    className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                                        lessonType === "image"
-                                            ? "border-amber-500 bg-amber-50/60 shadow-sm"
-                                            : "border-gray-200 bg-gray-50 hover:bg-gray-100/70"
-                                    }`}
-                                >
-                                    <div
-                                        className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                                            lessonType === "image"
-                                                ? "bg-amber-500 text-white"
-                                                : "bg-gray-200 text-gray-600"
-                                        }`}
+                                {(videoPath || preview) && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setVideoPath("");
+                                            setPreview(undefined);
+                                            setIsUpload(false);
+                                            setProgress(0);
+                                            if (fileInputRef.current) fileInputRef.current.value = "";
+                                        }}
+                                        className="text-xs text-red-600 hover:text-red-700 font-medium hover:underline"
                                     >
-                                        <ImageIcon size={24} />
-                                    </div>
-                                    <div>
-                                        <h4 className="font-semibold text-gray-900">
-                                            Article / Image Lesson
-                                        </h4>
-                                        <p className="text-xs text-gray-500 mt-0.5">
-                                            Text instructions with an image or graphic (No video required)
-                                        </p>
-                                    </div>
-                                </div>
+                                        Remove / Clear Video
+                                    </button>
+                                )}
                             </div>
-                        </div>
-
-                        {/* 5. Video Source Section (Only for Video Lessons) */}
-                        {lessonType === "video" && (
-                            <div className="mb-6 p-5 border rounded-xl bg-gray-50/50">
-                                <label className="block text-base font-semibold text-gray-700 mb-3">
-                                    Video Source
-                                </label>
 
                                 {/* Option Tabs */}
                                 <div className="flex gap-4 mb-4">
@@ -673,19 +630,14 @@ export const AddLeason = () => {
                                     </div>
                                 )}
                             </div>
-                        )}
 
-                        {/* 6. Lesson Graphic / Reference Image (Available for both Video and Article) */}
+                        {/* 6. Lesson Graphic / Reference Image (Optional) */}
                         <div className="mb-6 p-5 border rounded-xl bg-gray-50/50">
                             <label className="block text-base font-semibold text-gray-700 mb-1">
-                                {lessonType === "video"
-                                    ? "Attached Reference Graphic / Image (Optional)"
-                                    : "Lesson Image / Diagram (Optional)"}
+                                Lesson Graphic / Reference Image (Optional)
                             </label>
                             <p className="text-xs text-gray-500 mb-3">
-                                {lessonType === "video"
-                                    ? "Attach an illustrative photo, nail art diagram, or step sheet to accompany this video lesson."
-                                    : "Upload an illustrative image, infographics, or manual page for this article lesson."}
+                                Attach an illustrative photo, nail art diagram, or step sheet to accompany this lesson.
                             </p>
 
                             {imagePreview ? (
@@ -708,9 +660,7 @@ export const AddLeason = () => {
                                 <label className="w-full h-40 border-2 border-dashed border-gray-300 hover:border-amber-400 rounded-xl flex flex-col items-center justify-center cursor-pointer bg-white transition">
                                     <ImageIcon size={32} className="text-gray-400 mb-2" />
                                     <p className="font-medium text-gray-700">
-                                        {lessonType === "video"
-                                            ? "Click to attach reference image"
-                                            : "Click to upload lesson image"}
+                                        Click to upload graphic / reference image
                                     </p>
                                     <p className="text-xs text-gray-400 mt-1">PNG, JPG, JPEG, WEBP up to 10MB</p>
                                     <input

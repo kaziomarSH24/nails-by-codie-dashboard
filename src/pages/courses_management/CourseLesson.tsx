@@ -66,9 +66,7 @@ const CourseLesson = ({ id }: CourseLessonProps) => {
     // =================== PREVIEW HANDLERS ===================
     const handlePreview = (item: Lesson) => {
         setActiveLesson(item);
-        if (item.lesson_type === "image" || (!item.video_url && item.image_url)) {
-            setImageModal(true);
-        } else if (item.video_url) {
+        if (item.video_url) {
             setActiveVideo(item.video_url);
             setVideoModal(true);
         } else {
@@ -208,15 +206,15 @@ const CourseLesson = ({ id }: CourseLessonProps) => {
                                         </div>
                                     </div>
                                     <span className="text-xs font-semibold px-3 py-1 bg-white/80 rounded-full border border-amber-200 text-amber-800">
-                                        {lessons.filter((l) => l.lesson_type === "image").length} Articles /{" "}
-                                        {lessons.filter((l) => l.lesson_type !== "image").length} Videos
+                                        {lessons.filter((l) => !l.video_url).length} Articles /{" "}
+                                        {lessons.filter((l) => Boolean(l.video_url)).length} Videos
                                     </span>
                                 </div>
 
                                 {/* Lessons inside Module */}
                                 <div className="p-4 space-y-3">
                                     {lessons.map((item, lIndex) => {
-                                        const isImageLesson = item.lesson_type === "image" || Boolean(item.image_url && !item.video_url);
+                                        const isImageLesson = !item.video_url;
                                         const durationStr = formatDurationDisplay(item);
 
                                         return (
