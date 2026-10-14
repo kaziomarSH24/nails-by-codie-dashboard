@@ -6,6 +6,14 @@ import {
     ChevronRight,
     Play,
     Image as ImageIcon,
+    Eye,
+    Edit3,
+    Trash2,
+    BookOpen,
+    Clock,
+    X,
+    Layers,
+    Award,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent } from "../../components/ui/card";
@@ -15,7 +23,6 @@ import { Dialog, DialogClose, DialogContent, DialogFooter, DialogTitle } from ".
 import { Link } from "react-router-dom";
 import { useAllCourseQuery, useDeleteCourseMutation, usePublishUnPublishCourseMutation } from "../../api/course-api/courseApi";
 import type { CourseType } from "../../lib/type/courseType";
-import { FaEdit, FaTrashAlt } from "react-icons/fa";
 import { errorMessage } from "../../lib/error/errorMsg";
 import { deleteAlert } from "../../lib/alert/deleteAlert";
 import { toast } from "sonner";
@@ -40,14 +47,10 @@ import {
 } from "media-chrome/react";
 
 const CourseTable = () => {
-
     const { data, isLoading, refetch } = useAllCourseQuery({});
 
-
-    // ------------------------- ?DELETE COURSE ----------------------
-
+    // ------------------------- DELETE COURSE ----------------------
     const [deleteCourse] = useDeleteCourseMutation();
-
 
     const handleDelete = async (id: number) => {
         try {
@@ -62,13 +65,11 @@ const CourseTable = () => {
         } catch (error) {
             return errorMessage(error);
         }
-    }
+    };
 
-
-
-    // -------------------ALL COURSE ---------------------
-
+    // ------------------- ALL COURSE & FILTERS ---------------------
     const [search, setSearch] = useState("");
+    const [statusFilter, setStatusFilter] = useState<"all" | "published" | "draft">("all");
     const [openUpdateModal, setOpenUpdateModal] = useState(false);
 
     type Course = {
@@ -78,7 +79,7 @@ const CourseTable = () => {
         description: string;
         is_published: boolean;
         price: string;
-        reward_points: string
+        reward_points: string;
     };
 
     const [selectedCourse, setSelectedCourse] = useState<Course | undefined>(undefined);
@@ -87,37 +88,48 @@ const CourseTable = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const coursesPerPage = 10;
 
-
-
-
-
     const courseData: CourseType[] = data?.data || [];
 
-    // Filtered & Paginated data
-    const filteredCourses = courseData.filter(course =>
-        course.title.toLowerCase().includes(search.toLowerCase())
-    );
+    // Filter by search & status
+    const filteredCourses = courseData.filter((course) => {
+        const matchesSearch =
+            course.title.toLowerCase().includes(search.toLowerCase()) ||
+            (course.instructor && course.instructor.toLowerCase().includes(search.toLowerCase())) ||
+            (course.description && course.description.toLowerCase().includes(search.toLowerCase()));
+
+        if (!matchesSearch) return false;
+
+        if (statusFilter === "published") return Boolean(course.is_published);
+        if (statusFilter === "draft") return !Boolean(course.is_published);
+        return true;
+    });
+
+    const publishedCount = courseData.filter((c) => Boolean(c.is_published)).length;
+    const draftCount = courseData.length - publishedCount;
+
     const totalPages = Math.ceil(filteredCourses.length / coursesPerPage);
     const startIndex = (currentPage - 1) * coursesPerPage;
     const paginatedCourses = filteredCourses.slice(startIndex, startIndex + coursesPerPage);
 
     const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
 
-    const handleNext = () => { if (currentPage < totalPages) setCurrentPage(currentPage + 1); };
-    const handlePrev = () => { if (currentPage > 1) setCurrentPage(currentPage - 1); };
+    const handleNext = () => {
+        if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+    };
+    const handlePrev = () => {
+        if (currentPage > 1) setCurrentPage(currentPage - 1);
+    };
 
     // ====================== course details ============================
-
     const [courseDetailsModl, setCourseDetailsModal] = useState<boolean>(false);
     const [courseId, setCourseId] = useState<number | undefined>(undefined);
 
     const handleCourseDetails = async (id: number) => {
-        setCourseDetailsModal(true)
+        setCourseDetailsModal(true);
         setCourseId(id);
-    }
+    };
 
     const { data: courseDetails } = useGetLessonByCourseIdQuery(courseId);
-
 
     const courseTitle: CourseLessonType = courseDetails?.data;
     const lessonData: Lesson[] = courseDetails?.data?.lessons || [];
@@ -129,11 +141,6 @@ const CourseTable = () => {
         return acc;
     }, {});
     const sectionNames = Object.keys(groupedLessons);
-
-
-
-
-
 
     const [videoModal, setVideoModal] = useState<boolean>(false);
     const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -153,176 +160,356 @@ const CourseTable = () => {
     };
 
     // =========================================== Course Publish Unpublish ========================================
-
     const [publishUnPublishCourse] = usePublishUnPublishCourseMutation();
-
 
     const handlePublishCourse = async (courseId: number, publishNumber: number) => {
         try {
             const res = await publishUnPublishCourse({ courseId, publishNumber }).unwrap();
             if (res) {
                 toast.success(res?.message);
+                refetch();
             }
-
         } catch (error) {
-            return errorMessage(error)
+            return errorMessage(error);
         }
-    }
-
-
-
+    };
 
     if (isLoading) {
         return (
-            <div className=" flex justify-center " >
+            <div className="flex justify-center items-center py-24">
                 <Spinner />
             </div>
-        )
+        );
     }
 
-
-
-
-
     return (
-        <div className="bg-[#FFFFFF] shadow shadow-[#00000033] py-9 px-7 rounded-[14.13px] overflow-x-auto ">
+        <div className="bg-white shadow-sm border border-gray-100 py-8 px-6 sm:px-8 rounded-2xl space-y-6">
             {/* Header */}
-            <div className="flex justify-between items-center">
-                <h1 className="font-medium text-3xl">All Courses</h1>
-                <Link to={`/dashboard/course-create`}>
-                    <button className="flex items-center gap-2 px-6 py-3 rounded-full text-black font-medium text-lg bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] hover:opacity-90 transition duration-200 shadow-sm">
-                        <Plus size={22} strokeWidth={2.5} /> Create Course
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-gray-100">
+                <div>
+                    <h1 className="font-bold text-2xl sm:text-3xl text-gray-900 tracking-tight">Courses Management</h1>
+                    <p className="text-sm text-gray-500 mt-1">
+                        Create, manage and publish your online courses and modules.
+                    </p>
+                </div>
+                <Link to="/dashboard/course-create">
+                    <button className="flex items-center gap-2 px-6 py-2.5 rounded-full text-black font-semibold text-sm sm:text-base bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] hover:brightness-105 active:scale-[0.99] transition duration-200 shadow-sm">
+                        <Plus size={18} strokeWidth={2.5} /> Create Course
                     </button>
                 </Link>
             </div>
 
-            {/* Search */}
-            <div className="mt-6 mb-6 w-[80%] relative">
-                <Search className="absolute left-3 top-[17px] h-4 w-4 text-gray-500" />
-                <input
-                    type="text"
-                    placeholder="Search Course by name"
-                    value={search}
-                    onChange={(e) => {
-                        setSearch(e.target.value);
-                        setCurrentPage(1); // reset to first page on search
-                    }}
-                    className="w-full pl-10 pr-3 py-3.5 border border-[#B9B9B9] rounded-[5.95px] focus:ring-0 focus:outline-none text-sm"
-                />
+            {/* Filter Tabs & Search Controls */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                {/* Search Input */}
+                <div className="relative flex-1 max-w-md">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <input
+                        type="text"
+                        placeholder="Search by title, instructor, or description..."
+                        value={search}
+                        onChange={(e) => {
+                            setSearch(e.target.value);
+                            setCurrentPage(1);
+                        }}
+                        className="w-full pl-10 pr-9 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 focus:outline-none text-sm transition"
+                    />
+                    {search && (
+                        <button
+                            onClick={() => setSearch("")}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                            <X size={15} />
+                        </button>
+                    )}
+                </div>
+
+                {/* Status Filter Tabs */}
+                <div className="inline-flex items-center p-1 bg-slate-100 rounded-xl text-xs font-semibold self-start md:self-auto">
+                    <button
+                        onClick={() => {
+                            setStatusFilter("all");
+                            setCurrentPage(1);
+                        }}
+                        className={`px-3 py-1.5 rounded-lg transition ${
+                            statusFilter === "all"
+                                ? "bg-white text-gray-900 shadow-sm font-bold"
+                                : "text-gray-600 hover:text-gray-900"
+                        }`}
+                    >
+                        All ({courseData.length})
+                    </button>
+                    <button
+                        onClick={() => {
+                            setStatusFilter("published");
+                            setCurrentPage(1);
+                        }}
+                        className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition ${
+                            statusFilter === "published"
+                                ? "bg-white text-emerald-800 shadow-sm font-bold"
+                                : "text-gray-600 hover:text-gray-900"
+                        }`}
+                    >
+                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        Published ({publishedCount})
+                    </button>
+                    <button
+                        onClick={() => {
+                            setStatusFilter("draft");
+                            setCurrentPage(1);
+                        }}
+                        className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition ${
+                            statusFilter === "draft"
+                                ? "bg-white text-amber-800 shadow-sm font-bold"
+                                : "text-gray-600 hover:text-gray-900"
+                        }`}
+                    >
+                        <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                        Drafts ({draftCount})
+                    </button>
+                </div>
             </div>
 
-            {/* Table */}
-            <Card className=" overflow-x-auto " >
-                <CardContent>
+            {/* Courses Table */}
+            <div className="border border-gray-200/80 rounded-xl overflow-hidden shadow-sm">
+                <div className="overflow-x-auto">
                     <Table>
-                        <TableHeader>
-                            <TableRow className="text-sm text-[#686868]">
-                                <TableHead>Thumbnail</TableHead>
-                                <TableHead>Course Title</TableHead>
-                                <TableHead>Description</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="text-center">Actions</TableHead>
+                        <TableHeader className="bg-slate-50/80">
+                            <TableRow className="text-xs uppercase tracking-wider text-slate-500 font-semibold border-b border-gray-200">
+                                <TableHead className="py-3.5 pl-5">Course</TableHead>
+                                <TableHead className="py-3.5">Price & Info</TableHead>
+                                <TableHead className="py-3.5">Description</TableHead>
+                                <TableHead className="py-3.5 text-center">Status</TableHead>
+                                <TableHead className="py-3.5 pr-5 text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
-                        <TableBody>
-                            {paginatedCourses.length > 0 ? paginatedCourses.map(course => (
-                                <TableRow key={course.id}>
-                                    <TableCell>
-                                        <img
-                                            src={course.thumbnail}
-                                            alt={course.title}
-                                            className="w-16 h-10 object-cover rounded-md"
-                                        />
-                                    </TableCell>
-                                    <TableCell className="font-medium  ">{course.title.slice(0, 30)}....</TableCell>
-                                    <TableCell className="text-[#989898]">{course.description.slice(0, 30)}....</TableCell>
-                                    <TableCell>
-                                        <Badge className={course.is_published == true ? "bg-[#EAF6EC] text-[#238B39] px-4 py-1 rounded-[26px] text-sm" : "bg-[#F6F5EA] text-[#8B7B23] px-4 py-1 rounded-[26px] text-sm"}>
-                                            {
-                                                course.is_published == true ? "Publish" : "Unpublish"
-                                            }
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="text-right space-x-2">
-                                        <Link to={`/dashboard/add-leason/${course.id}`}>
-                                            <Button
-                                                className="rounded-[33px] px-3 py-1.5 bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] hover:opacity-90 transition duration-200 shadow-sm text-black"
+                        <TableBody className="divide-y divide-gray-100">
+                            {paginatedCourses.length > 0 ? (
+                                paginatedCourses.map((course) => (
+                                    <TableRow
+                                        key={course.id}
+                                        className="hover:bg-amber-50/20 transition-colors group"
+                                    >
+                                        {/* Thumbnail & Title */}
+                                        <TableCell className="py-4 pl-5">
+                                            <div className="flex items-center gap-3 min-w-[220px] max-w-[280px]">
+                                                <div className="w-16 h-12 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 shrink-0 shadow-sm flex items-center justify-center">
+                                                    {course.thumbnail ? (
+                                                        <img
+                                                            src={course.thumbnail}
+                                                            alt={course.title}
+                                                            className="w-full h-full object-cover"
+                                                            onError={(e) => {
+                                                                (e.target as HTMLElement).style.display = "none";
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <BookOpen className="text-amber-500 w-5 h-5" />
+                                                    )}
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <h3
+                                                        className="font-semibold text-sm text-gray-900 truncate group-hover:text-amber-900 transition"
+                                                        title={course.title}
+                                                    >
+                                                        {course.title}
+                                                    </h3>
+                                                    <p className="text-xs text-slate-500 truncate mt-0.5">
+                                                        By {course.instructor || "Instructor"}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </TableCell>
 
+                                        {/* Price & Duration */}
+                                        <TableCell className="py-4">
+                                            <div className="space-y-1">
+                                                <div className="font-bold text-sm text-gray-900">
+                                                    £{course.price}
+                                                </div>
+                                                <div className="flex items-center gap-2 text-xs text-slate-500">
+                                                    {course.duration && (
+                                                        <span className="flex items-center gap-1">
+                                                            <Clock size={11} className="text-slate-400" />
+                                                            {course.duration}
+                                                        </span>
+                                                    )}
+                                                    {Boolean(course.reward_points) && (
+                                                        <span className="inline-flex items-center gap-0.5 text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded text-[10px] font-medium border border-amber-200/60">
+                                                            <Award size={10} /> {course.reward_points} pts
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </TableCell>
 
+                                        {/* Description */}
+                                        <TableCell className="py-4 max-w-xs">
+                                            <p
+                                                className="text-xs text-slate-600 line-clamp-2 leading-relaxed"
+                                                title={course.description}
                                             >
-                                                Add Lesson
-                                            </Button>
-                                        </Link>
-                                        {
-                                            course?.is_published == true ? <> <Button
-                                                onClick={() => handlePublishCourse(course?.id, 0)}
-                                                className="rounded-[33px] px-3 py-1.5 bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] hover:opacity-90 transition duration-200 shadow-sm text-black">
-                                                Unpublish
-                                            </Button> </> : <> <Button
-                                                onClick={() => handlePublishCourse(course?.id, 1)}
-                                                className="rounded-[33px] px-3 py-1.5 bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] hover:opacity-90 transition duration-200 shadow-sm text-black"
+                                                {course.description || "No description provided."}
+                                            </p>
+                                        </TableCell>
 
+                                        {/* Status */}
+                                        <TableCell className="py-4 text-center">
+                                            {course.is_published ? (
+                                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                                    Published
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                                    Draft
+                                                </span>
+                                            )}
+                                        </TableCell>
 
-                                            >
+                                        {/* Actions */}
+                                        <TableCell className="py-4 pr-5 text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                {/* Add Lesson Button */}
+                                                <Link to={`/dashboard/add-leason/${course.id}`}>
+                                                    <button
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] text-black hover:opacity-90 transition shadow-sm"
+                                                        title="Add or manage lessons"
+                                                    >
+                                                        <Plus size={13} strokeWidth={2.5} />
+                                                        <span>Add Lesson</span>
+                                                    </button>
+                                                </Link>
 
-                                                Publish
+                                                {/* Publish / Unpublish Toggle Button */}
+                                                {course.is_published ? (
+                                                    <button
+                                                        onClick={() => handlePublishCourse(course.id, 0)}
+                                                        className="px-2.5 py-1.5 rounded-lg text-xs font-medium border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition"
+                                                        title="Unpublish course"
+                                                    >
+                                                        Unpublish
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => handlePublishCourse(course.id, 1)}
+                                                        className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition"
+                                                        title="Publish course"
+                                                    >
+                                                        Publish
+                                                    </button>
+                                                )}
 
-
-                                            </Button>  </>
-                                        }
-                                        <Button
-                                            className="border border-[#989898] px-2 py-1 bg-white"
-                                            onClick={() => { setSelectedCourse(course); setOpenUpdateModal(true); }}
-                                        >
-                                            <FaEdit color="#B9B9B9" />
-                                        </Button>
-                                        <Button onClick={() => { handleDelete(course.id) }} className="border border-[#989898] px-2 py-1 bg-white">
-                                            {
-                                                <FaTrashAlt color="#B9B9B9" />
-                                            }
-                                        </Button>
-                                        <Button onClick={() => { handleCourseDetails(course.id) }} className="border border-[#989898] px-2 py-1 bg-white">
-                                            <svg width="22" height="15" viewBox="0 0 22 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M11 4.5C10.2044 4.5 9.44129 4.81607 8.87868 5.37868C8.31607 5.94129 8 6.70435 8 7.5C8 8.29565 8.31607 9.05871 8.87868 9.62132C9.44129 10.1839 10.2044 10.5 11 10.5C11.7956 10.5 12.5587 10.1839 13.1213 9.62132C13.6839 9.05871 14 8.29565 14 7.5C14 6.70435 13.6839 5.94129 13.1213 5.37868C12.5587 4.81607 11.7956 4.5 11 4.5ZM11 12.5C9.67392 12.5 8.40215 11.9732 7.46447 11.0355C6.52678 10.0979 6 8.82608 6 7.5C6 6.17392 6.52678 4.90215 7.46447 3.96447C8.40215 3.02678 9.67392 2.5 11 2.5C12.3261 2.5 13.5979 3.02678 14.5355 3.96447C15.4732 4.90215 16 6.17392 16 7.5C16 8.82608 15.4732 10.0979 14.5355 11.0355C13.5979 11.9732 12.3261 12.5 11 12.5ZM11 0C6 0 1.73 3.11 0 7.5C1.73 11.89 6 15 11 15C16 15 20.27 11.89 22 7.5C20.27 3.11 16 0 11 0Z" fill="#B9B9B9" />
-                                            </svg>
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            )) : (
+                                                {/* Icon Actions: View, Edit, Delete */}
+                                                <div className="flex items-center gap-1 pl-1 border-l border-gray-200">
+                                                    <button
+                                                        onClick={() => handleCourseDetails(course.id)}
+                                                        className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:text-amber-800 hover:bg-amber-50 hover:border-amber-300 transition"
+                                                        title="View Curriculum & Lessons"
+                                                    >
+                                                        <Eye size={15} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedCourse(course);
+                                                            setOpenUpdateModal(true);
+                                                        }}
+                                                        className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-300 transition"
+                                                        title="Edit Course Details"
+                                                    >
+                                                        <Edit3 size={14} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(course.id)}
+                                                        className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:text-red-600 hover:bg-red-50 hover:border-red-300 transition"
+                                                        title="Delete Course"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="text-center text-gray-500 py-6">
-                                        No courses found
+                                    <TableCell colSpan={5} className="text-center py-12">
+                                        <div className="flex flex-col items-center justify-center max-w-sm mx-auto text-gray-500">
+                                            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3 text-slate-400">
+                                                <Search size={22} />
+                                            </div>
+                                            <p className="font-semibold text-gray-800 text-sm">No courses found</p>
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                {search
+                                                    ? `No courses matching "${search}". Try clearing search or changing filters.`
+                                                    : "No courses are currently available in this category."}
+                                            </p>
+                                            {search && (
+                                                <button
+                                                    onClick={() => setSearch("")}
+                                                    className="mt-3 text-xs font-semibold text-amber-700 hover:underline"
+                                                >
+                                                    Clear search
+                                                </button>
+                                            )}
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             )}
                         </TableBody>
                     </Table>
-                </CardContent>
-            </Card>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-                <div className="flex justify-end items-center mt-4 gap-2">
-                    <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={handlePrev}>
-                        <ChevronLeft className="w-4 h-4" />
-                    </Button>
-                    {pageNumbers.map(page => (
-                        <button
-                            key={page}
-                            onClick={() => setCurrentPage(page)}
-                            className={`px-3 py-1 rounded-md text-sm font-medium border ${currentPage === page
-                                ? "bg-[#FFD700] text-black border-[#FFD700]"
-                                : "bg-white text-gray-600 border-[#B9B9B9] hover:bg-gray-100"
-                                }`}
-                        >
-                            {page}
-                        </button>
-                    ))}
-                    <Button variant="outline" size="sm" disabled={currentPage === totalPages} onClick={handleNext}>
-                        <ChevronRight className="w-4 h-4" />
-                    </Button>
                 </div>
-            )}
+            </div>
+
+            {/* Pagination & Count Footer */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+                <p className="text-xs text-gray-500 font-medium">
+                    Showing{" "}
+                    <span className="font-semibold text-gray-800">
+                        {filteredCourses.length > 0 ? startIndex + 1 : 0}
+                    </span>{" "}
+                    to{" "}
+                    <span className="font-semibold text-gray-800">
+                        {Math.min(startIndex + coursesPerPage, filteredCourses.length)}
+                    </span>{" "}
+                    of <span className="font-semibold text-gray-800">{filteredCourses.length}</span> courses
+                </p>
+
+                {totalPages > 1 && (
+                    <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                        <button
+                            disabled={currentPage === 1}
+                            onClick={handlePrev}
+                            className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                        >
+                            <ChevronLeft className="w-4 h-4" />
+                        </button>
+
+                        {pageNumbers.map((page) => (
+                            <button
+                                key={page}
+                                onClick={() => setCurrentPage(page)}
+                                className={`min-w-8 h-8 px-2 rounded-lg text-xs font-semibold transition border ${
+                                    currentPage === page
+                                        ? "bg-amber-400 text-black border-amber-400 shadow-sm"
+                                        : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                                }`}
+                            >
+                                {page}
+                            </button>
+                        ))}
+
+                        <button
+                            disabled={currentPage === totalPages}
+                            onClick={handleNext}
+                            className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                        >
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
+            </div>
 
             {/* Update Course Modal */}
             <Dialog open={openUpdateModal} onOpenChange={setOpenUpdateModal}>
