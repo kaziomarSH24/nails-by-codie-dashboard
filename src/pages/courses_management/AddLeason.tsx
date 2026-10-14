@@ -308,7 +308,10 @@ export const AddLeason = () => {
                 if (data?.video_url) {
                     formData.append("video_url", data.video_url.trim());
                     formData.append("video_type", "url");
-                    formData.append("duration", String(videoMinutes * 60));
+                    const dur = (videoMinutes * 60) || (uploadSize && uploadSize > 0 ? Math.ceil(uploadSize) : 0);
+                    if (dur > 0) {
+                        formData.append("duration", String(dur));
+                    }
                 }
             }
         } else {
@@ -610,6 +613,12 @@ export const AddLeason = () => {
                                                 slot="media"
                                                 src={preview}
                                                 controls={false}
+                                                onLoadedMetadata={(e: any) => {
+                                                    const dur = e?.target?.duration;
+                                                    if (dur && isFinite(dur) && dur > 0 && (!uploadSize || uploadSize <= 0)) {
+                                                        setUploadSize(dur);
+                                                    }
+                                                }}
                                                 style={{
                                                     width: "100%",
                                                     height: "100%",

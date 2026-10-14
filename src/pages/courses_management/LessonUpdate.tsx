@@ -102,8 +102,15 @@ export const LessonUpdate = ({ lessonId, courseId, setUpdateModal }: LessonUpdat
             if (data.video_type === "url") {
                 setVideoUrlInput(data.video_path ?? "");
                 setPreview(data.video_path ?? "");
+                if (data.video_path) {
+                    calculateYouTubeDuration(data.video_path);
+                }
             } else if (data.video_url) {
                 setPreview(data.video_url);
+            }
+
+            if (data.duration && data.duration > 0) {
+                setUploadSize(data.duration);
             }
 
             // Populate image data
@@ -587,6 +594,12 @@ export const LessonUpdate = ({ lessonId, courseId, setUpdateModal }: LessonUpdat
                                         slot="media"
                                         src={preview}
                                         controls={false}
+                                        onLoadedMetadata={(e: any) => {
+                                            const dur = e?.target?.duration;
+                                            if (dur && isFinite(dur) && dur > 0 && (!uploadSize || uploadSize <= 0)) {
+                                                setUploadSize(dur);
+                                            }
+                                        }}
                                         style={{ width: "100%", height: "100%" }}
                                     />
                                     <MediaControlBar>

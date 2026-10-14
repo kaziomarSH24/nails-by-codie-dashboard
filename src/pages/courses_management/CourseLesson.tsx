@@ -127,13 +127,21 @@ const CourseLesson = ({ id }: CourseLessonProps) => {
     };
 
     const formatDurationDisplay = (lesson: Lesson) => {
-        if (lesson.actual_duration) return lesson.actual_duration;
-        if (lesson.duration) {
-            const mins = Math.floor(lesson.duration / 60);
-            const secs = Math.round(lesson.duration % 60);
-            return `${mins}m ${secs}s`;
+        const dur = Number(lesson.duration);
+        if (!dur || dur <= 0) {
+            return null;
         }
-        return null;
+        if (lesson.actual_duration && lesson.actual_duration !== "0s") {
+            return lesson.actual_duration;
+        }
+        const hours = Math.floor(dur / 3600);
+        const mins = Math.floor((dur % 3600) / 60);
+        const secs = Math.round(dur % 60);
+
+        if (hours > 0) return `${hours}h ${mins}m`;
+        if (mins > 0 && secs > 0) return `${mins}m ${secs}s`;
+        if (mins > 0) return `${mins}m`;
+        return `${secs}s`;
     };
 
     if (isLoading) {
@@ -201,13 +209,12 @@ const CourseLesson = ({ id }: CourseLessonProps) => {
                                                 {sectionTitle}
                                             </h3>
                                             <span className="text-xs text-gray-500 font-medium">
-                                                Module {sIndex + 1} • {lessons.length} {lessons.length === 1 ? "Lesson" : "Lessons"}
+                                                Module {sIndex + 1}
                                             </span>
                                         </div>
                                     </div>
-                                    <span className="text-xs font-semibold px-3 py-1 bg-white/80 rounded-full border border-amber-200 text-amber-800">
-                                        {lessons.filter((l) => !l.video_url).length} Articles /{" "}
-                                        {lessons.filter((l) => Boolean(l.video_url)).length} Videos
+                                    <span className="text-xs font-semibold px-3 py-1 bg-white/80 rounded-full border border-amber-200 text-amber-800 shadow-sm flex items-center gap-1.5">
+                                        {lessons.length} {lessons.length === 1 ? "Lesson" : "Lessons"}
                                     </span>
                                 </div>
 
