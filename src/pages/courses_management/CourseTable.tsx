@@ -275,7 +275,7 @@ const CourseTable = () => {
                             <TableRow className="text-xs uppercase tracking-wider text-slate-500 font-semibold border-b border-gray-200">
                                 <TableHead className="py-3.5 pl-5">Course</TableHead>
                                 <TableHead className="py-3.5">Price & Info</TableHead>
-                                <TableHead className="py-3.5">Description</TableHead>
+                                <TableHead className="py-3.5 text-center">Lessons</TableHead>
                                 <TableHead className="py-3.5 text-center">Status</TableHead>
                                 <TableHead className="py-3.5 pr-5 text-right">Actions</TableHead>
                             </TableRow>
@@ -340,14 +340,14 @@ const CourseTable = () => {
                                             </div>
                                         </TableCell>
 
-                                        {/* Description */}
-                                        <TableCell className="py-4 max-w-xs">
-                                            <p
-                                                className="text-xs text-slate-600 line-clamp-2 leading-relaxed"
-                                                title={course.description}
-                                            >
-                                                {course.description || "No description provided."}
-                                            </p>
+                                        {/* Total Lessons Count */}
+                                        <TableCell className="py-4 text-center">
+                                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200 shadow-sm">
+                                                <BookOpen size={13} className="text-amber-600" />
+                                                <span>
+                                                    {course.total_lessons ?? 0} {Number(course.total_lessons) === 1 ? "Lesson" : "Lessons"}
+                                                </span>
+                                            </span>
                                         </TableCell>
 
                                         {/* Status */}
