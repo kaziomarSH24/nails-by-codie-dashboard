@@ -461,8 +461,8 @@ const CourseLesson = ({ id }: CourseLessonProps) => {
 
             {/* =================== IMAGE & ARTICLE PREVIEW MODAL =================== */}
             {imageModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-                    <div className="bg-white w-full max-w-3xl max-h-[90vh] rounded-2xl overflow-hidden shadow-2xl relative flex flex-col">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+                    <div className="bg-white w-full max-w-4xl xl:max-w-5xl max-h-[92vh] rounded-2xl overflow-hidden shadow-2xl relative flex flex-col">
                         <div className="flex items-center justify-between p-4 border-b bg-gray-50">
                             <div>
                                 <div className="flex items-center gap-2">
@@ -485,34 +485,54 @@ const CourseLesson = ({ id }: CourseLessonProps) => {
                             </button>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
                             {/* Graphic / Image */}
-                            {(activeLesson?.image_url || activeLesson?.image_path) && (
-                                <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-gray-50 flex justify-center">
-                                    <img
-                                        src={(() => {
-                                            const target = activeLesson.image_url || activeLesson.image_path;
-                                            if (!target) return "";
-                                            if (target.startsWith("http://") || target.startsWith("https://")) return target;
-                                            const clean = target.startsWith("/") ? target : `/${target}`;
-                                            const storagePath = clean.startsWith("/storage/") ? clean : `/storage${clean}`;
-                                            return `${import.meta.env.VITE_BASE_URL}${storagePath}`;
-                                        })()}
-                                        alt={activeLesson.title}
-                                        className="max-h-96 w-auto object-contain"
-                                    />
-                                </div>
-                            )}
+                            {(activeLesson?.image_url || activeLesson?.image_path) && (() => {
+                                const target = activeLesson.image_url || activeLesson.image_path;
+                                if (!target) return null;
+                                const clean = target.startsWith("/") ? target : `/${target}`;
+                                const storagePath = clean.startsWith("/storage/") ? clean : `/storage${clean}`;
+                                const fullUrl = target.startsWith("http://") || target.startsWith("https://")
+                                    ? target
+                                    : `${import.meta.env.VITE_BASE_URL}${storagePath}`;
+
+                                return (
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between px-1">
+                                            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                                Article Document / Graphic
+                                            </span>
+                                            <a
+                                                href={fullUrl}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="text-xs font-medium text-amber-700 hover:text-amber-800 hover:underline flex items-center gap-1"
+                                            >
+                                                Open High-Resolution in New Tab ↗
+                                            </a>
+                                        </div>
+                                        <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-gray-100 flex justify-center p-2 sm:p-4">
+                                            <img
+                                                src={fullUrl}
+                                                alt={activeLesson?.title}
+                                                className="w-full max-w-3xl h-auto object-contain rounded-lg shadow-md bg-white"
+                                            />
+                                        </div>
+                                    </div>
+                                );
+                            })()}
 
                             {/* Content */}
-                            <div>
-                                <h5 className="text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide">
-                                    Lesson Content
-                                </h5>
-                                <div className="text-gray-700 text-sm leading-relaxed whitespace-pre-line bg-slate-50 p-4 rounded-xl border border-slate-100">
-                                    {activeLesson?.description || "No content provided for this lesson."}
+                            {activeLesson?.description ? (
+                                <div>
+                                    <h5 className="text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide">
+                                        Lesson Content
+                                    </h5>
+                                    <div className="text-gray-700 text-sm leading-relaxed whitespace-pre-line bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                        {activeLesson.description}
+                                    </div>
                                 </div>
-                            </div>
+                            ) : null}
                         </div>
 
                         <div className="p-4 border-t bg-gray-50 flex justify-end">

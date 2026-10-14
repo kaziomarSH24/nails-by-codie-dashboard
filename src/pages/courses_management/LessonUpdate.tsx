@@ -687,11 +687,11 @@ export const LessonUpdate = ({ lessonId, courseId, setUpdateModal }: LessonUpdat
                     </p>
 
                     {imagePreview ? (
-                        <div className="relative border rounded-xl overflow-hidden bg-white max-w-md shadow-sm">
+                        <div className="relative border rounded-xl overflow-hidden bg-slate-50 max-w-xl shadow-sm flex justify-center p-2">
                             <img
                                 src={imagePreview}
                                 alt="Lesson Preview"
-                                className="w-full h-56 object-cover"
+                                className="w-full max-h-96 object-contain rounded-lg"
                             />
                             <button
                                 type="button"
