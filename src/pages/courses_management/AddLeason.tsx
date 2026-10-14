@@ -7,11 +7,15 @@ import { useNavigate, useParams } from "react-router-dom";
 import Resumable from "resumablejs";
 import { useForm, Controller } from "react-hook-form";
 import { errorMessage } from "../../lib/error/errorMsg";
-import { useLessonUploadMutation } from "../../api/lesson-api/lessonApi";
+import {
+    useLessonUploadMutation,
+    useGetLessonByCourseIdQuery,
+} from "../../api/lesson-api/lessonApi";
 import { uploadAlert } from "../../lib/alert/uploadAlert";
 import { toast } from "sonner";
 import { Spinner } from "../../components/ui/spinner";
 import { IoMdArrowRoundBack } from "react-icons/io";
+import { Video, Image as ImageIcon, Layers, Eye, Upload, Link2, X } from "lucide-react";
 import ReactPlayer from "react-player";
 import {
     MediaController,
@@ -27,7 +31,6 @@ import {
     MediaFullscreenButton,
 } from "media-chrome/react";
 
-
 type FormValues = {
     title: string;
     description: string;
@@ -36,24 +39,42 @@ type FormValues = {
 
 export const AddLeason = () => {
     const { id } = useParams<{ id: string }>();
-
-    const [preview, setPrivew] = useState<string | undefined>(undefined);
-
+    const navigate = useNavigate();
     const token = localStorage.getItem("token");
 
+    // Course data to get title & existing section names
+    const { data: courseResp } = useGetLessonByCourseIdQuery(id);
+    const courseTitle = courseResp?.data?.title || "Course";
+    const existingLessons = courseResp?.data?.lessons || [];
+    const existingSections: string[] = Array.from(
+        new Set(
+            existingLessons
+                .map((l: any) => l.section_name?.trim())
+                .filter((s: string | undefined): s is string => Boolean(s && s.length > 0))
+        )
+    );
+
+    // Section & Lesson Type state
+    const [sectionName, setSectionName] = useState<string>("Introduction");
+    const [lessonType, setLessonType] = useState<"video" | "image">("video");
+    const [isFreePreview, setIsFreePreview] = useState<boolean>(false);
+
+    // Video states
     const [videoOption, setVideoOption] = useState<"upload" | "url">("upload");
+    const [preview, setPreview] = useState<string | undefined>(undefined);
     const [uploading, setUploading] = useState(false);
     const [progress, setProgress] = useState(0);
     const [videoPath, setVideoPath] = useState<string>("");
     const [isUpload, setIsUpload] = useState<boolean>(false);
-
     const [uploadSize, setUploadSize] = useState<number>();
 
-
-
+    // Image states (file held locally until form submission)
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
 
     const resumableRef = useRef<Resumable | null>(null);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const imageInputRef = useRef<HTMLInputElement | null>(null);
 
     // -------------------- React Hook Form --------------------
     const {
@@ -69,7 +90,6 @@ export const AddLeason = () => {
         },
     });
 
-
     // -------------------- ResumableJS Setup --------------------
     useEffect(() => {
         if (!id || !token) return;
@@ -79,7 +99,6 @@ export const AddLeason = () => {
             chunkSize: 2 * 1024 * 1024,
             simultaneousUploads: 3,
             testChunks: false,
-            // throttleProgressCallbacks: 1,
             headers: { Authorization: `Bearer ${token}` },
             query: { course_id: id },
             fileType: ["mp4", "mkv", "mov", "avi"],
@@ -104,64 +123,80 @@ export const AddLeason = () => {
         r.on("fileSuccess", (_file: string, message: string) => {
             try {
                 const res = JSON.parse(message);
-                setPrivew(res?.url)
+                setPreview(res?.url);
                 if (res.ok && res.path) {
                     setIsUpload(true);
                     setVideoPath(res.path);
                 }
             } catch (err) {
-                return errorMessage(err)
+                return errorMessage(err);
             }
             setUploading(false);
             setProgress(100);
         });
 
         r.on("fileError", (_file, message) => {
-            toast.success(message)
+            toast.error(message || "Video upload failed");
             setUploading(false);
         });
 
         return () => r.cancel();
     }, [id, token]);
 
-
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-
         const file = e.target.files?.[0];
         if (!file) return;
 
         // Upload file
         resumableRef.current?.addFile(file);
 
-        // Calculate duration
+        // Calculate duration using video element (handles .mov, .mp4 reliably)
         const url = URL.createObjectURL(file);
-        const audio = new Audio(url);
+        const videoEl = document.createElement("video");
+        videoEl.preload = "metadata";
+        videoEl.src = url;
 
-
-        audio.addEventListener("loadedmetadata", () => {
-            const durationInSeconds = audio.duration;
-            setUploadSize(durationInSeconds)
-
-            // const second = durationInSeconds
-
+        videoEl.onloadedmetadata = () => {
+            setUploadSize(videoEl.duration);
             URL.revokeObjectURL(url);
-        });
+        };
+        videoEl.onerror = () => {
+            // Fallback audio check
+            const audio = new Audio(url);
+            audio.addEventListener("loadedmetadata", () => {
+                setUploadSize(audio.duration);
+                URL.revokeObjectURL(url);
+            });
+        };
     };
 
+    // -------------------- Image Handler (Local Preview only) --------------------
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
 
+        setImageFile(file);
+        setImagePreview(URL.createObjectURL(file));
+    };
 
-
+    const handleRemoveImage = () => {
+        if (imagePreview) {
+            URL.revokeObjectURL(imagePreview);
+        }
+        setImagePreview(null);
+        setImageFile(null);
+        if (imageInputRef.current) {
+            imageInputRef.current.value = "";
+        }
+    };
 
     const [lessonUpload, { isLoading }] = useLessonUploadMutation();
 
-
-
-    // ======================= calculate video url duraction =================================
-
+    // -------------------- YouTube Duration Calculation --------------------
     const [loadingDuration, setLoadingDuration] = useState(false);
-    const [durationError, setDurationError] = useState<string>('');
-    const [videoDuration, setVideoDuration] = useState(''); // formatted (4:13)
-    const [videoMinutes, setVideoMinutes] = useState(0);   // total minutes (5)
+    const [durationError, setDurationError] = useState<string>("");
+    const [videoDuration, setVideoDuration] = useState("");
+    const [videoMinutes, setVideoMinutes] = useState(0);
     const [timeLoading, setTimeLoading] = useState<boolean>(false);
 
     const extractVideoId = (url: string) => {
@@ -180,16 +215,15 @@ export const AddLeason = () => {
         const seconds = parseInt(matches[3] || "0");
 
         if (hours > 0) {
-            return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            return `${hours}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
         } else {
-            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            return `${minutes}:${seconds.toString().padStart(2, "0")}`;
         }
     };
 
     const durationToMinutes = (isoDuration: string) => {
         const regex = /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/;
         const matches = isoDuration.match(regex);
-
         if (!matches) return 0;
 
         const hours = parseInt(matches[1] || "0");
@@ -199,18 +233,16 @@ export const AddLeason = () => {
         return hours * 60 + minutes + Math.ceil(seconds / 60);
     };
 
-
-
     const calculateYouTubeDuration = async (url: string) => {
-        setPrivew(url)
+        setPreview(url);
         setLoadingDuration(true);
-        setDurationError('');
-        setVideoDuration('');
+        setDurationError("");
+        setVideoDuration("");
         setVideoMinutes(0);
 
         const videoId = extractVideoId(url);
         if (!videoId) {
-            setDurationError('Invalid YouTube URL');
+            setDurationError("Invalid YouTube URL");
             setLoadingDuration(false);
             return;
         }
@@ -222,113 +254,168 @@ export const AddLeason = () => {
             const data = await res.json();
 
             if (!data.items?.length) {
-                setDurationError('Video not found or private');
+                setDurationError("Video not found or private");
                 return;
             }
 
             const isoDuration = data.items[0].contentDetails.duration;
-            setTimeLoading(true)
+            setTimeLoading(true);
 
-            // UI format
             const formatted = parseDuration(isoDuration);
-
-
             const totalMinutes = durationToMinutes(isoDuration);
-
 
             setVideoDuration(formatted);
             setVideoMinutes(totalMinutes);
-            setTimeLoading(false)
-
+            setTimeLoading(false);
         } catch (err) {
             if (err instanceof Error) {
                 setDurationError(err.message);
             } else {
                 setDurationError("Something went wrong");
             }
-        };
-    }
-
-
-
-
-
-
-
-
-
-    // -------------------- Submit Handler --------------------
-    const onSubmit = async (data: FormValues) => {
-
-        const formData = new FormData();
-        if (videoOption == "upload") {
-            formData.append("video_type", "upload");
-            formData.append("video_path", videoPath);
-            if (uploadSize) {
-                formData.append("duration", String(Math.ceil(uploadSize)));
-            }
-        } else {
-            if (data?.video_url) {
-                formData.append("video_url", data.video_url);
-                formData.append("video_type", "url");
-                formData.append("duration", String(videoMinutes * 60));
-            }
-        }
-        formData.append("title", data.title);
-        formData.append("description", data.description);
-
-
-        // ✅ Send data + videoPath to backend here
-
-        try {
-
-            const res = await uploadAlert();
-            if (res) {
-                const res = await lessonUpload({ formData, id }).unwrap()
-                if (res) {
-                    toast.success(res?.message);
-                    reset();
-                    setIsUpload(false)
-                    setPrivew(undefined)
-                }
-            }
-
-        } catch (error) {
-            return errorMessage(error)
-
+        } finally {
+            setLoadingDuration(false);
         }
     };
 
+    // -------------------- Submit Handler --------------------
+    const onSubmit = async (data: FormValues) => {
+        if (lessonType === "video") {
+            if (videoOption === "upload" && !videoPath) {
+                toast.error("Please upload a video file or wait for upload to finish.");
+                return;
+            }
+            if (videoOption === "url" && !data?.video_url) {
+                toast.error("Please enter a valid video link.");
+                return;
+            }
+        }
 
-    const navigate = useNavigate();
+        const formData = new FormData();
+        formData.append("title", data.title);
+        formData.append("description", data.description || "");
+        formData.append("section_name", sectionName.trim() || "General");
+        formData.append("lesson_type", lessonType);
+        formData.append("is_free_preview", isFreePreview ? "1" : "0");
 
+        if (lessonType === "video") {
+            if (videoOption === "upload") {
+                formData.append("video_type", "upload");
+                formData.append("video_path", videoPath);
+                if (uploadSize) {
+                    formData.append("duration", String(Math.ceil(uploadSize)));
+                }
+            } else {
+                if (data?.video_url) {
+                    formData.append("video_url", data.video_url);
+                    formData.append("video_type", "url");
+                    formData.append("duration", String(videoMinutes * 60));
+                }
+            }
+        } else {
+            // Article / Image Lesson
+            if (imageFile) {
+                formData.append("image", imageFile);
+            }
+            formData.append("duration", "0");
+        }
 
-
-
+        try {
+            const confirmed = await uploadAlert();
+            if (confirmed) {
+                const res = await lessonUpload({ formData, id }).unwrap();
+                if (res) {
+                    toast.success(res?.message || "Lesson added successfully");
+                    reset();
+                    setIsUpload(false);
+                    setVideoPath("");
+                    setPreview(undefined);
+                    setImageFile(null);
+                    setImagePreview(null);
+                    setUploadSize(undefined);
+                    setProgress(0);
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                    if (imageInputRef.current) imageInputRef.current.value = "";
+                }
+            }
+        } catch (error) {
+            return errorMessage(error);
+        }
+    };
 
     return (
         <div>
-            <div className=" flex items-center gap-x-2 " >
-                <div onClick={() => { navigate("/dashboard/courses-management") }} className=" w-10 h-10 border-2 border-black flex justify-center  items-center rounded-full cursor-pointer  " >
-                    <span> <IoMdArrowRoundBack size={25} /> </span>
+            <div className="flex items-center gap-x-2 mb-4">
+                <div
+                    onClick={() => {
+                        navigate("/dashboard/courses-management");
+                    }}
+                    className="w-10 h-10 border-2 border-black flex justify-center items-center rounded-full cursor-pointer hover:bg-gray-100 transition"
+                >
+                    <IoMdArrowRoundBack size={25} />
                 </div>
                 <div>
-                    <h1 className=" text-lg font-semibold " >
-                        Back
-                    </h1>
+                    <h1 className="text-lg font-semibold">Back to Courses</h1>
                 </div>
             </div>
-            <div className="  pb-20  " >
+
+            <div className="pb-20">
                 <div className="max-w-7xl p-9 rounded-[14px] mx-auto bg-white shadow shadow-[#00000033]">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                        Add Lessons to Acrylic Nail Art Masterclass
-                    </h2>
+                    <div className="border-b pb-4 mb-6">
+                        <span className="text-sm font-semibold uppercase tracking-wider text-amber-600">
+                            Course Content Builder
+                        </span>
+                        <h2 className="text-2xl font-bold text-gray-800 mt-1">
+                            Add Lessons to: {courseTitle}
+                        </h2>
+                    </div>
 
                     <form onSubmit={handleSubmit(onSubmit)}>
-                        {/* Lesson Title */}
+                        {/* 1. Module / Section Name */}
+                        <div className="mb-6 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                            <div className="flex items-center gap-2 mb-2">
+                                <Layers className="w-5 h-5 text-amber-600" />
+                                <label className="text-base font-semibold text-gray-800">
+                                    Course Section / Module Name *
+                                </label>
+                            </div>
+                            <p className="text-xs text-gray-500 mb-3">
+                                Group lessons into structured modules (e.g. "Introduction", "What you will need", "Nail Art Tutorials").
+                            </p>
+                            <Input
+                                value={sectionName}
+                                onChange={(e) => setSectionName(e.target.value)}
+                                placeholder="Enter section name (e.g. Introduction)"
+                                className="w-full bg-white font-medium"
+                                required
+                            />
+
+                            {/* Quick Suggestions for existing sections */}
+                            {existingSections.length > 0 && (
+                                <div className="flex flex-wrap items-center gap-2 mt-3">
+                                    <span className="text-xs font-medium text-gray-600">Existing modules:</span>
+                                    {existingSections.map((sec) => (
+                                        <button
+                                            key={sec}
+                                            type="button"
+                                            onClick={() => setSectionName(sec)}
+                                            className={`text-xs px-3 py-1 rounded-full border transition-all ${
+                                                sectionName === sec
+                                                    ? "bg-amber-500 text-white border-amber-500 font-semibold shadow-sm"
+                                                    : "bg-white text-gray-700 border-gray-300 hover:border-amber-400"
+                                            }`}
+                                        >
+                                            + {sec}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* 2. Lesson Title */}
                         <div className="mb-4">
-                            <label className="block text-lg font-medium text-gray-700 mb-2">
-                                Lesson Title
+                            <label className="block text-base font-semibold text-gray-700 mb-2">
+                                Lesson Title *
                             </label>
                             <Controller
                                 name="title"
@@ -337,7 +424,7 @@ export const AddLeason = () => {
                                 render={({ field }) => (
                                     <Input
                                         {...field}
-                                        placeholder="Enter Lesson Title"
+                                        placeholder="e.g. Introduction to Nail Art / What You Will Need"
                                         className={errors.title ? "border-red-500" : ""}
                                     />
                                 )}
@@ -347,184 +434,332 @@ export const AddLeason = () => {
                             )}
                         </div>
 
-                        {/* Lesson Description */}
-                        <div className="mb-4">
-                            <label className="block text-lg font-medium text-gray-700 mb-2">
-                                Lesson Description
+                        {/* 3. Lesson Description / Content */}
+                        <div className="mb-6">
+                            <label className="block text-base font-semibold text-gray-700 mb-2">
+                                Lesson Content / Description
                             </label>
                             <Controller
                                 name="description"
                                 control={control}
-                                rules={{ required: "Lesson description is required" }}
                                 render={({ field }) => (
                                     <Textarea
                                         {...field}
-                                        placeholder="Enter Lesson Description"
+                                        rows={4}
+                                        placeholder="Enter lesson description, instructions, materials list, or article content..."
                                         className={errors.description ? "border-red-500" : ""}
                                     />
                                 )}
                             />
-                            {errors.description && (
-                                <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>
-                            )}
                         </div>
 
-                        {/* Lesson Video */}
+                        {/* 4. Lesson Type Toggle (Video vs Article/Image) */}
                         <div className="mb-6">
-                            <label className="block text-lg font-medium text-gray-700 mb-2">
-                                Lesson Video
+                            <label className="block text-base font-semibold text-gray-700 mb-2">
+                                Lesson Format *
                             </label>
-
-                            {/* Option Boxes */}
-                            <div className="flex gap-6 mb-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div
-                                    onClick={() => setVideoOption("upload")}
-                                    className={`flex flex-col items-center justify-center h-[100px] w-full rounded-md border cursor-pointer ${videoOption === "upload"
-                                        ? "bg-yellow-100 border-2 border-yellow-400"
-                                        : "bg-gray-50"
-                                        }`}
+                                    onClick={() => setLessonType("video")}
+                                    className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                                        lessonType === "video"
+                                            ? "border-amber-500 bg-amber-50/60 shadow-sm"
+                                            : "border-gray-200 bg-gray-50 hover:bg-gray-100/70"
+                                    }`}
                                 >
-                                    <span className="text-sm mt-2">Upload Video</span>
+                                    <div
+                                        className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                                            lessonType === "video"
+                                                ? "bg-amber-500 text-white"
+                                                : "bg-gray-200 text-gray-600"
+                                        }`}
+                                    >
+                                        <Video size={24} />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-semibold text-gray-900">Video Lesson</h4>
+                                        <p className="text-xs text-gray-500 mt-0.5">
+                                            Upload video file (.MOV, .MP4) or paste YouTube link
+                                        </p>
+                                    </div>
                                 </div>
 
                                 <div
-                                    onClick={() => setVideoOption("url")}
-                                    className={`flex flex-col items-center justify-center h-[100px] w-full rounded-md border cursor-pointer ${videoOption === "url"
-                                        ? "bg-yellow-100 border-2 border-yellow-400"
-                                        : "bg-gray-50"
-                                        }`}
+                                    onClick={() => setLessonType("image")}
+                                    className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                                        lessonType === "image"
+                                            ? "border-amber-500 bg-amber-50/60 shadow-sm"
+                                            : "border-gray-200 bg-gray-50 hover:bg-gray-100/70"
+                                    }`}
                                 >
-                                    <span className="text-sm mt-2">Video Link</span>
+                                    <div
+                                        className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                                            lessonType === "image"
+                                                ? "bg-amber-500 text-white"
+                                                : "bg-gray-200 text-gray-600"
+                                        }`}
+                                    >
+                                        <ImageIcon size={24} />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-semibold text-gray-900">
+                                            Article / Image Lesson
+                                        </h4>
+                                        <p className="text-xs text-gray-500 mt-0.5">
+                                            Text instructions with an image or graphic (No video required)
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-
-                            {/* Upload File */}
-                            {videoOption === "upload" && (
-                                <label className="w-full h-40 border-2 border-dashed rounded-md flex flex-col items-center justify-center cursor-pointer">
-                                    <p>Click to upload video</p>
-                                    <input
-                                        ref={fileInputRef}
-                                        type="file"
-
-                                        accept="video/mp4,video/mov,video/avi"
-                                        className="hidden"
-                                        onChange={handleFileChange}
-                                    />
-                                </label>
-                            )}
-
-                            {videoOption === "upload" && (
-                                <>
-                                    {/* Progress */}
-                                    {uploading && (
-                                        <div className="mt-4">
-                                            <div className="w-full bg-gray-200 rounded">
-                                                <div
-                                                    className="h-2 bg-green-500 rounded"
-                                                    style={{ width: `${progress}%` }}
-                                                />
-                                            </div>
-                                            <p className="text-sm mt-2">{progress}%</p>
-                                        </div>
-                                    )}
-
-                                    {/* Video upload successfully message */}
-                                    {isUpload && (
-                                        <p className="font-semibold text-xl mt-3 text-green-600">
-                                            Video uploaded successfully
-                                        </p>
-                                    )}
-                                </>
-                            )}
-
-                            {/* Video Link */}
-                            {videoOption === "url" && (
-                                <Controller
-                                    name="video_url"
-                                    control={control}
-                                    rules={{
-                                        required: videoOption === "url" ? "Video link is required" : false,
-                                    }}
-                                    render={({ field }) => (
-                                        <Input
-                                            {...field}
-                                            placeholder="Enter video link"
-                                            className={errors.video_url ? "border-red-500" : ""}
-                                            onBlur={(e) => {
-                                                field.onBlur();
-                                                calculateYouTubeDuration(e.target.value); // calculate on blur
-                                            }}
-                                        />
-                                    )}
-                                />
-                            )}
-                            {errors.video_url && (
-                                <p className="text-red-500 text-sm mt-1">{errors.video_url.message}</p>
-                            )}
-
-                            {loadingDuration && <p className="text-sm">Calculating duration...</p>}
-
-                            {videoDuration && (
-                                <p className="text-green-600 text-sm">
-                                    Duration: {videoDuration} ({videoMinutes} minutes)
-                                </p>
-                            )}
-
-                            {durationError && (
-                                <p className="text-red-500 text-sm">{durationError}</p>
-                            )}
                         </div>
 
-                        {
-                            preview && (
-                                <MediaController
-                                    style={{
-                                        width: "50%",
-                                        aspectRatio: "16/9",
-                                    }}
-                                >
-                                    <ReactPlayer
-                                        slot="media"
-                                        src={preview}
-                                        controls={false}
-                                        style={{
-                                            width: "100%",
-                                            height: "100%",
-                                            // "--controls": "none",
-                                        }}
-                                    ></ReactPlayer>
-                                    <MediaControlBar>
-                                        <MediaPlayButton />
-                                        <MediaSeekBackwardButton seekOffset={10} />
-                                        <MediaSeekForwardButton seekOffset={10} />
-                                        <MediaTimeRange />
-                                        <MediaTimeDisplay showDuration />
-                                        <MediaMuteButton />
-                                        <MediaVolumeRange />
-                                        <MediaPlaybackRateButton />
-                                        <MediaFullscreenButton />
-                                    </MediaControlBar>
-                                </MediaController>
-                            )
-                        }
+                        {/* 5. Conditional Media Section: Video or Image */}
+                        {lessonType === "video" ? (
+                            <div className="mb-6 p-5 border rounded-xl bg-gray-50/50">
+                                <label className="block text-base font-semibold text-gray-700 mb-3">
+                                    Video Source
+                                </label>
 
-                        {/* Submit */}
-                        <div className="mt-12 flex justify-end">
+                                {/* Option Tabs */}
+                                <div className="flex gap-4 mb-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setVideoOption("upload")}
+                                        className={`flex-1 py-3 px-4 rounded-lg border font-medium flex items-center justify-center gap-2 transition-all ${
+                                            videoOption === "upload"
+                                                ? "bg-yellow-100 border-yellow-400 text-amber-900"
+                                                : "bg-white text-gray-600 border-gray-200 hover:bg-gray-100"
+                                        }`}
+                                    >
+                                        <Upload size={18} /> Upload Video (.MOV / .MP4)
+                                    </button>
 
+                                    <button
+                                        type="button"
+                                        onClick={() => setVideoOption("url")}
+                                        className={`flex-1 py-3 px-4 rounded-lg border font-medium flex items-center justify-center gap-2 transition-all ${
+                                            videoOption === "url"
+                                                ? "bg-yellow-100 border-yellow-400 text-amber-900"
+                                                : "bg-white text-gray-600 border-gray-200 hover:bg-gray-100"
+                                        }`}
+                                    >
+                                        <Link2 size={18} /> Video Link (YouTube)
+                                    </button>
+                                </div>
+
+                                {/* Upload File */}
+                                {videoOption === "upload" && (
+                                    <label className="w-full h-40 border-2 border-dashed border-gray-300 hover:border-amber-400 rounded-xl flex flex-col items-center justify-center cursor-pointer bg-white transition">
+                                        <Upload size={32} className="text-gray-400 mb-2" />
+                                        <p className="font-medium text-gray-700">Click to upload video</p>
+                                        <p className="text-xs text-gray-400 mt-1">
+                                            Supports .MOV, .MP4, .MKV, .AVI (Resumable chunked upload)
+                                        </p>
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            accept="video/*,.mov,.mp4,.avi,.mkv"
+                                            className="hidden"
+                                            onChange={handleFileChange}
+                                        />
+                                    </label>
+                                )}
+
+                                {videoOption === "upload" && (
+                                    <>
+                                        {/* Progress Bar */}
+                                        {uploading && (
+                                            <div className="mt-4">
+                                                <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                                                    <div
+                                                        className="bg-amber-500 h-2.5 transition-all duration-300"
+                                                        style={{ width: `${progress}%` }}
+                                                    />
+                                                </div>
+                                                <p className="text-sm font-medium text-gray-600 mt-2">
+                                                    Uploading: {progress}%
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {/* Upload Success message */}
+                                        {isUpload && (
+                                            <p className="font-semibold text-base mt-3 text-green-600 flex items-center gap-2">
+                                                ✓ Video uploaded successfully
+                                                {uploadSize ? (
+                                                    <span className="text-xs text-gray-500 font-normal">
+                                                        ({Math.floor(uploadSize / 60)}m {Math.round(uploadSize % 60)}s)
+                                                    </span>
+                                                ) : null}
+                                            </p>
+                                        )}
+                                    </>
+                                )}
+
+                                {/* Video Link */}
+                                {videoOption === "url" && (
+                                    <div className="mt-2">
+                                        <Controller
+                                            name="video_url"
+                                            control={control}
+                                            rules={{
+                                                required: videoOption === "url" ? "Video link is required" : false,
+                                            }}
+                                            render={({ field }) => (
+                                                <Input
+                                                    {...field}
+                                                    placeholder="Enter YouTube video link (e.g. https://www.youtube.com/watch?v=...)"
+                                                    className={errors.video_url ? "border-red-500" : ""}
+                                                    onBlur={(e) => {
+                                                        field.onBlur();
+                                                        calculateYouTubeDuration(e.target.value);
+                                                    }}
+                                                />
+                                            )}
+                                        />
+                                        {errors.video_url && (
+                                            <p className="text-red-500 text-sm mt-1">{errors.video_url.message}</p>
+                                        )}
+
+                                        {loadingDuration && (
+                                            <p className="text-sm text-gray-500 mt-2">Calculating duration...</p>
+                                        )}
+
+                                        {videoDuration && (
+                                            <p className="text-green-600 text-sm font-medium mt-2">
+                                                Duration: {videoDuration} ({videoMinutes} minutes)
+                                            </p>
+                                        )}
+
+                                        {durationError && (
+                                            <p className="text-red-500 text-sm mt-2">{durationError}</p>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Video Player Preview */}
+                                {preview && (
+                                    <div className="mt-4 rounded-xl overflow-hidden border">
+                                        <MediaController
+                                            style={{
+                                                width: "100%",
+                                                maxHeight: "360px",
+                                                aspectRatio: "16/9",
+                                            }}
+                                        >
+                                            <ReactPlayer
+                                                slot="media"
+                                                src={preview}
+                                                controls={false}
+                                                style={{
+                                                    width: "100%",
+                                                    height: "100%",
+                                                }}
+                                            />
+                                            <MediaControlBar>
+                                                <MediaPlayButton />
+                                                <MediaSeekBackwardButton seekOffset={10} />
+                                                <MediaSeekForwardButton seekOffset={10} />
+                                                <MediaTimeRange />
+                                                <MediaTimeDisplay showDuration />
+                                                <MediaMuteButton />
+                                                <MediaVolumeRange />
+                                                <MediaPlaybackRateButton />
+                                                <MediaFullscreenButton />
+                                            </MediaControlBar>
+                                        </MediaController>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            /* Article / Image Uploader */
+                            <div className="mb-6 p-5 border rounded-xl bg-gray-50/50">
+                                <label className="block text-base font-semibold text-gray-700 mb-2">
+                                    Lesson Image / Diagram (Optional)
+                                </label>
+                                <p className="text-xs text-gray-500 mb-3">
+                                    Upload an illustrative image, infographics, or manual page for this article lesson.
+                                </p>
+
+                                {imagePreview ? (
+                                    <div className="relative border rounded-xl overflow-hidden bg-white max-w-md shadow-sm">
+                                        <img
+                                            src={imagePreview}
+                                            alt="Lesson Preview"
+                                            className="w-full h-64 object-cover"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={handleRemoveImage}
+                                            className="absolute top-3 right-3 bg-red-600 text-white rounded-full p-1.5 shadow hover:bg-red-700 transition"
+                                            title="Remove Image"
+                                        >
+                                            <X size={18} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <label className="w-full h-40 border-2 border-dashed border-gray-300 hover:border-amber-400 rounded-xl flex flex-col items-center justify-center cursor-pointer bg-white transition">
+                                        <ImageIcon size={32} className="text-gray-400 mb-2" />
+                                        <p className="font-medium text-gray-700">Click to upload lesson image</p>
+                                        <p className="text-xs text-gray-400 mt-1">PNG, JPG, JPEG, WEBP up to 10MB</p>
+                                        <input
+                                            ref={imageInputRef}
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={handleImageChange}
+                                        />
+                                    </label>
+                                )}
+
+                                {imageFile && (
+                                    <p className="font-semibold text-sm mt-3 text-green-600 flex items-center gap-1.5">
+                                        ✓ Image selected: {imageFile.name} (will be saved when lesson is created)
+                                    </p>
+                                )}
+                            </div>
+                        )}
+
+                        {/* 6. Free Preview Checkbox */}
+                        <div className="mb-8 flex items-center gap-3 p-3.5 bg-gray-50 rounded-xl border border-gray-200">
+                            <input
+                                type="checkbox"
+                                id="is_free_preview"
+                                checked={isFreePreview}
+                                onChange={(e) => setIsFreePreview(e.target.checked)}
+                                className="w-4 h-4 text-amber-600 rounded border-gray-300 focus:ring-amber-500 cursor-pointer"
+                            />
+                            <label
+                                htmlFor="is_free_preview"
+                                className="text-sm font-medium text-gray-700 cursor-pointer flex items-center gap-1.5"
+                            >
+                                <Eye size={16} className="text-gray-500" />
+                                Allow Free Preview (Students can access this lesson before purchasing)
+                            </label>
+                        </div>
+
+                        {/* Submit Button */}
+                        <div className="mt-8 flex justify-end">
                             <Button
                                 type="submit"
-                                disabled={timeLoading}
-                                className="bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] w-full "
+                                disabled={timeLoading || uploading}
+                                className="bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] text-black font-semibold text-base py-3 px-8 rounded-full shadow hover:opacity-95 transition"
                             >
-                                {isLoading ? <div className=" " >
-                                    <Spinner />
-                                </div> : "Add Lesson"}
+                                {isLoading ? (
+                                    <div className="flex items-center gap-2">
+                                        <Spinner />
+                                        <span>Saving Lesson...</span>
+                                    </div>
+                                ) : (
+                                    "+ Add Lesson to Course"
+                                )}
                             </Button>
                         </div>
                     </form>
                 </div>
 
-                <div className="max-w-7xl mx-auto mt-8">
+                {/* Course Lessons List Component */}
+                <div className="max-w-7xl mx-auto mt-10">
                     <CourseLesson id={id} />
                 </div>
             </div>
@@ -532,4 +767,4 @@ export const AddLeason = () => {
     );
 };
 
-
+export default AddLeason;

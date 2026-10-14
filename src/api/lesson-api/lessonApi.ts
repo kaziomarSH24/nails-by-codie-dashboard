@@ -41,12 +41,14 @@ export const lessonApi = baseApi.injectEndpoints({
                 body: formData
             }),
             invalidatesTags: ["Lesson"]
-        })
-
-
-
-
+        }),
     }),
 })
 
-export const { useLessonUploadMutation, useGetLessonByCourseIdQuery, useLessonDeleteMutation, useLazySingleLessonQuery, useLessonUpdateMutation } = lessonApi
+export const {
+    useLessonUploadMutation,
+    useGetLessonByCourseIdQuery,
+    useLessonDeleteMutation,
+    useLazySingleLessonQuery,
+    useLessonUpdateMutation,
+} = lessonApi

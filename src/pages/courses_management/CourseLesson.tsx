@@ -1,7 +1,5 @@
 import { useState } from "react";
-
 import { toast } from "sonner";
-
 import {
     useGetLessonByCourseIdQuery,
     useLessonDeleteMutation,
@@ -12,7 +10,6 @@ import { deleteAlert } from "../../lib/alert/deleteAlert";
 import { errorMessage } from "../../lib/error/errorMsg";
 import type { CourseLessonType, Lesson } from "../../lib/type/lessonType";
 import { usePublishCourseMutation, useUnPublishCourseMutation } from "../../api/course-api/courseApi";
-// import { updateAlert } from "../../lib/alert/updateAlert";
 import LessonUpdate from "./LessonUpdate";
 import { courseUpdateAlert } from "../../lib/alert/updateAlert";
 import ReactPlayer from "react-player";
@@ -30,113 +27,117 @@ import {
     MediaFullscreenButton,
 } from "media-chrome/react";
 import { useNavigate } from "react-router-dom";
+import { Play, Image as ImageIcon, Video, Edit3, Trash2, Layers, Eye, FileText, X } from "lucide-react";
 
-const CourseLesson = ({ id }: { id: string | undefined }) => {
+interface CourseLessonProps {
+    id: string | undefined;
+}
+
+const CourseLesson = ({ id }: CourseLessonProps) => {
     const courseId = id;
-
-    const navigate = useNavigate()
-
+    const navigate = useNavigate();
 
     // =================== STATE ===================
-    const [openModal, setOpenModal] = useState(false);
+    const [videoModal, setVideoModal] = useState(false);
+    const [imageModal, setImageModal] = useState(false);
     const [activeVideo, setActiveVideo] = useState<string | null>(null);
+    const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
     const [lessonId, setLessonId] = useState<number | undefined>(undefined);
+    const [updateModal, setUpdateModal] = useState<boolean>(false);
 
-
-    // =================== lesson details api ===================
+    // =================== API ===================
     const { data, isLoading } = useGetLessonByCourseIdQuery(courseId);
-
 
     const courseData: CourseLessonType = data?.data;
     const lessonData: Lesson[] = data?.data?.lessons || [];
 
-    // =================== PLAY VIDEO ===================
-    const handlePlay = (videoUrl: string) => {
-        setActiveVideo(videoUrl);
-        setOpenModal(true);
+    // Group lessons by section_name
+    const groupedLessons = lessonData.reduce<Record<string, Lesson[]>>((acc, item) => {
+        const section = item.section_name?.trim() || "General Lessons";
+        if (!acc[section]) {
+            acc[section] = [];
+        }
+        acc[section].push(item);
+        return acc;
+    }, {});
+
+    const sectionNames = Object.keys(groupedLessons);
+
+    // =================== PREVIEW HANDLERS ===================
+    const handlePreview = (item: Lesson) => {
+        setActiveLesson(item);
+        if (item.lesson_type === "image" || (!item.video_url && item.image_url)) {
+            setImageModal(true);
+        } else if (item.video_url) {
+            setActiveVideo(item.video_url);
+            setVideoModal(true);
+        } else {
+            setImageModal(true);
+        }
     };
 
     // =================== DELETE ===================
-    const [lessonDelete,] = useLessonDeleteMutation();
-    const courseLessonDelete = async (id: string) => {
-        setLessonId(Number(id));
+    const [lessonDelete] = useLessonDeleteMutation();
+    const handleLessonDelete = async (id: number) => {
+        setLessonId(id);
         try {
             const res = await deleteAlert();
             if (res.isConfirmed) {
                 const response = await lessonDelete({
                     courseId,
-                    lessonId: id,
+                    lessonId: id.toString(),
                 }).unwrap();
 
-                toast.success(response?.message);
+                toast.success(response?.message || "Lesson deleted successfully");
             }
         } catch (error) {
             errorMessage(error);
         }
     };
 
-
-    //<<------------------------------- course status publish ----------------------------->>
-
+    // =================== PUBLISH / UNPUBLISH ===================
     const [publishCourse, { isLoading: courseStatusLoading }] = usePublishCourseMutation();
+    const [unPublishCourse, { isLoading: unPublishLoading }] = useUnPublishCourseMutation();
 
     const courseStatusUpdate = async () => {
         try {
             const res = await courseUpdateAlert();
-
             if (res.isConfirmed) {
-                const res = await publishCourse(courseId).unwrap();
-                if (res) {
-                    toast.success(res?.message);
-                }
+                const resp = await publishCourse(courseId).unwrap();
+                if (resp) toast.success(resp?.message);
             }
-
         } catch (error) {
             return errorMessage(error);
         }
-    }
-
-
-
-    //<<------------------------------- course unpublish ----------------------------->>
-
-    const [unPublishCourse, { isLoading: unPublishLoading }] = useUnPublishCourseMutation();
+    };
 
     const courseUnPublish = async () => {
         try {
             const res = await courseUpdateAlert();
-
             if (res.isConfirmed) {
-                const res = await unPublishCourse(courseId).unwrap();
-                if (res) {
-                    toast.success(res?.message);
-                }
+                const resp = await unPublishCourse(courseId).unwrap();
+                if (resp) toast.success(resp?.message);
             }
-
         } catch (error) {
             return errorMessage(error);
         }
-    }
-
-
-    // =================== UPDATE MODAL ===================
-
-    const [updateModal, setUpdateModal] = useState<boolean>(false);
-
+    };
 
     const handleUpdate = (id: number) => {
-        setUpdateModal(!updateModal)
-        setLessonId(id)
+        setLessonId(id);
+        setUpdateModal(true);
+    };
 
-    }
+    const formatDurationDisplay = (lesson: Lesson) => {
+        if (lesson.actual_duration) return lesson.actual_duration;
+        if (lesson.duration) {
+            const mins = Math.floor(lesson.duration / 60);
+            const secs = Math.round(lesson.duration % 60);
+            return `${mins}m ${secs}s`;
+        }
+        return null;
+    };
 
-
-
-
-
-
-
-    // =================== LOADING ===================
     if (isLoading) {
         return (
             <div className="flex justify-center mt-10">
@@ -146,176 +147,364 @@ const CourseLesson = ({ id }: { id: string | undefined }) => {
     }
 
     return (
-        <>
-            <div>
-                {/* =================== HEADER =================== */}
-                <div className="flex gap-x-7 items-center">
-                    <h1 className="text-3xl font-medium text-[#3A3734]">
-                        {courseData?.title} Course Lessons
-                    </h1>
+        <div className="mt-8">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-gray-200 gap-4">
+                <div>
+                    <h2 className="text-2xl font-bold text-gray-800">
+                        {courseData?.title} — Course Curriculum
+                    </h2>
+                    <p className="text-sm text-gray-500 mt-1">
+                        Total Modules: <span className="font-semibold text-gray-700">{sectionNames.length}</span> |
+                        Total Lessons: <span className="font-semibold text-gray-700">{lessonData.length}</span>
+                    </p>
                 </div>
 
-                {/* =================== LESSON LIST =================== */}
-                {lessonData.map((item, index) => (
-                    <div key={item.id} className="mt-6">
-                        <div className="flex justify-between items-center px-6 py-3 rounded-[38px] border border-[#989898]">
-                            {/* LEFT */}
-                            <div className="flex items-center gap-x-6">
-                                {/* ▶ Play icon */}
-                                <div
-                                    className="cursor-pointer"
-                                    onClick={() => handlePlay(item.video_url)}
-                                >
-                                    ▶
-                                </div>
-
-                                <div>
-                                    <h1 className="font-medium">
-                                        {index + 1}. {item.title}
-                                    </h1>
-                                    <p className="text-sm text-gray-600">
-                                        {item.description}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* RIGHT ACTIONS */}
-                            {/* update  */}
-                            <div className=" flex items-center gap-x-6  " >
-                                <div onClick={() => { handleUpdate(item?.id) }} className=" cursor-pointer  " >
-                                    <svg width="52" height="35" viewBox="0 0 52 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <rect x="0.583333" y="0.583333" width="50.1667" height="33.8333" rx="6.41667" stroke="#989898" strokeWidth="1.16667" />
-                                        <path d="M29.7236 7.00465C29.9184 7.02215 30.0036 7.26015 29.8636 7.39898L20.1569 17.1056C20.0472 17.2154 19.9687 17.3523 19.9294 17.5023L18.7627 21.9707C18.7242 22.1183 18.725 22.2735 18.765 22.4208C18.805 22.568 18.8828 22.7023 18.9907 22.8102C19.0986 22.9181 19.2328 22.9959 19.3801 23.0359C19.5274 23.0759 19.6826 23.0767 19.8302 23.0382L24.2974 21.8715C24.4476 21.8318 24.5845 21.7529 24.6941 21.6428L34.5384 11.7985C34.5692 11.7669 34.6084 11.7447 34.6514 11.7347C34.6944 11.7247 34.7393 11.7272 34.7809 11.7419C34.8226 11.7566 34.8591 11.783 34.8862 11.8178C34.9133 11.8527 34.9298 11.8945 34.9339 11.9385C35.3437 15.8464 35.3202 19.7876 34.8639 23.6903C34.6037 25.9128 32.8176 27.657 30.6032 27.9055C26.5475 28.3548 22.4545 28.3548 18.3987 27.9055C16.1832 27.657 14.397 25.9128 14.1369 23.6903C13.6562 19.5778 13.6562 15.4233 14.1369 11.3108C14.397 9.08715 16.1832 7.34298 18.3987 7.09565C22.1606 6.67865 25.9554 6.64816 29.7236 7.00465Z" fill="#B9B9B9" />
-                                        <path d="M31.2935 8.44311C31.3206 8.41595 31.3528 8.3944 31.3882 8.37969C31.4236 8.36499 31.4616 8.35742 31.5 8.35742C31.5383 8.35742 31.5763 8.36499 31.6118 8.37969C31.6472 8.3944 31.6794 8.41595 31.7065 8.44311L33.3561 10.0939C33.4106 10.1486 33.4412 10.2227 33.4412 10.2999C33.4412 10.3771 33.4106 10.4511 33.3561 10.5058L23.681 20.1833C23.6442 20.2199 23.5983 20.2461 23.548 20.2591L21.315 20.8424C21.2658 20.8553 21.214 20.855 21.1649 20.8417C21.1159 20.8284 21.0711 20.8024 21.0351 20.7665C20.9992 20.7305 20.9732 20.6857 20.9599 20.6366C20.9466 20.5876 20.9463 20.5358 20.9591 20.4866L21.5425 18.2536C21.5555 18.2033 21.5816 18.1574 21.6183 18.1206L31.2935 8.44311Z" fill="#B9B9B9" />
-                                    </svg>
-
-                                </div>
-                                {/* delete  */}
-                                <div onClick={() => { courseLessonDelete(String(item.id)) }} className=" cursor-pointer " >
-                                    {
-                                        <span>
-                                            <svg width="52" height="35" viewBox="0 0 52 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <rect x="0.583333" y="0.583333" width="50.1667" height="33.8333" rx="6.41667" stroke="#989898" strokeWidth="1.16667" />
-                                                <path d="M18.6665 28C18.0248 28 17.4757 27.7717 17.0192 27.3152C16.5626 26.8586 16.334 26.3091 16.3332 25.6667V10.5C16.0026 10.5 15.7257 10.388 15.5025 10.164C15.2793 9.94 15.1673 9.66311 15.1665 9.33333C15.1657 9.00356 15.2777 8.72667 15.5025 8.50267C15.7273 8.27867 16.0042 8.16667 16.3332 8.16667H20.9998C20.9998 7.83611 21.1118 7.55922 21.3358 7.336C21.5598 7.11278 21.8367 7.00078 22.1665 7H26.8332C27.1637 7 27.441 7.112 27.665 7.336C27.889 7.56 28.0006 7.83689 27.9998 8.16667H32.6665C32.9971 8.16667 33.2743 8.27867 33.4983 8.50267C33.7223 8.72667 33.834 9.00356 33.8332 9.33333C33.8324 9.66311 33.7204 9.94039 33.4972 10.1652C33.274 10.3899 32.9971 10.5016 32.6665 10.5V25.6667C32.6665 26.3083 32.4382 26.8578 31.9817 27.3152C31.5251 27.7725 30.9756 28.0008 30.3332 28H18.6665ZM22.1665 23.3333C22.4971 23.3333 22.7743 23.2213 22.9983 22.9973C23.2223 22.7733 23.334 22.4964 23.3332 22.1667V14C23.3332 13.6694 23.2212 13.3926 22.9972 13.1693C22.7732 12.9461 22.4963 12.8341 22.1665 12.8333C21.8367 12.8326 21.5598 12.9446 21.3358 13.1693C21.1118 13.3941 20.9998 13.671 20.9998 14V22.1667C20.9998 22.4972 21.1118 22.7745 21.3358 22.9985C21.5598 23.2225 21.8367 23.3341 22.1665 23.3333ZM26.8332 23.3333C27.1637 23.3333 27.441 23.2213 27.665 22.9973C27.889 22.7733 28.0006 22.4964 27.9998 22.1667V14C27.9998 13.6694 27.8878 13.3926 27.6638 13.1693C27.4398 12.9461 27.163 12.8341 26.8332 12.8333C26.5034 12.8326 26.2265 12.9446 26.0025 13.1693C25.7785 13.3941 25.6665 13.671 25.6665 14V22.1667C25.6665 22.4972 25.7785 22.7745 26.0025 22.9985C26.2265 23.2225 26.5034 23.3341 26.8332 23.3333Z" fill="#B9B9B9" />
-                                            </svg>
-
-                                        </span>
-                                    }
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-
-                {/* =================== ACTION BUTTONS =================== */}
-                <div className="mt-16 flex gap-x-6 justify-end">
-                    <Button onClick={() => { navigate("/dashboard/courses-management") }} className="bg-white text-black border rounded-[39px] px-9 py-2.5">
-                        Close
-                    </Button>
-
-                    <Button className="bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] px-9 py-2.5 rounded-[39px]">
-                        {
-                            courseData?.is_published == 1 ? <> <div onClick={courseUnPublish}  >
-                                {
-                                    unPublishLoading ? <> <div className=" flex justify-center " > <Spinner /> </div> </> : <> <div>UnPublish Course</div> </>
-                                }
-                            </div> </> : <>
-                                <div onClick={courseStatusUpdate} >
-
-                                    {
-                                        courseStatusLoading ? <><div><Spinner /> </div></> : <><div>Publish Course</div></>
-                                    }
-
-                                </div>
-                            </>
-                        }
-                    </Button>
+                <div className="flex items-center gap-3">
+                    <span
+                        className={`text-xs px-3 py-1 rounded-full font-semibold uppercase tracking-wider ${
+                            courseData?.is_published == 1
+                                ? "bg-green-100 text-green-700 border border-green-300"
+                                : "bg-amber-100 text-amber-700 border border-amber-300"
+                        }`}
+                    >
+                        {courseData?.is_published == 1 ? "● Published" : "○ Draft"}
+                    </span>
                 </div>
             </div>
 
-            {/* =================== VIDEO MODAL =================== */}
-            {openModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
+            {/* Empty State */}
+            {lessonData.length === 0 ? (
+                <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-300 mt-6">
+                    <Layers className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                    <h3 className="text-lg font-semibold text-gray-700">No lessons added yet</h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                        Use the builder form above to create your first module and add lessons.
+                    </p>
+                </div>
+            ) : (
+                /* Grouped Section / Module Curriculum */
+                <div className="space-y-8 mt-6">
+                    {sectionNames.map((sectionTitle, sIndex) => {
+                        const lessons = groupedLessons[sectionTitle];
+                        return (
+                            <div
+                                key={sectionTitle}
+                                className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm"
+                            >
+                                {/* Module Header Banner */}
+                                <div className="bg-gradient-to-r from-amber-50 to-orange-50/40 px-6 py-4 border-b border-amber-100 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-amber-500 text-white font-bold flex items-center justify-center text-sm shadow-sm">
+                                            {sIndex + 1}
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-bold text-gray-800">
+                                                {sectionTitle}
+                                            </h3>
+                                            <span className="text-xs text-gray-500 font-medium">
+                                                Module {sIndex + 1} • {lessons.length} {lessons.length === 1 ? "Lesson" : "Lessons"}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <span className="text-xs font-semibold px-3 py-1 bg-white/80 rounded-full border border-amber-200 text-amber-800">
+                                        {lessons.filter((l) => l.lesson_type === "image").length} Articles /{" "}
+                                        {lessons.filter((l) => l.lesson_type !== "image").length} Videos
+                                    </span>
+                                </div>
 
-                    {/* Modal Card */}
-                    <div className="bg-white w-full max-w-4xl  rounded-2xl p-6 relative animate-in fade-in zoom-in duration-200">
+                                {/* Lessons inside Module */}
+                                <div className="p-4 space-y-3">
+                                    {lessons.map((item, lIndex) => {
+                                        const isImageLesson = item.lesson_type === "image" || Boolean(item.image_url && !item.video_url);
+                                        const durationStr = formatDurationDisplay(item);
 
-                        {/* Close Button */}
-                        <button
-                            onClick={() => setOpenModal(false)}
-                            className="absolute  z-50 top-4 cursor-pointer right-4 text-gray-900 hover:text-gray-600 text-xl"
-                        >
-                            ✕
-                        </button>
-                        <MediaController
-                            style={{
-                                width: "98%",
-                                aspectRatio: "16/9",
-                            }}
-                        >
-                            <ReactPlayer
-                                slot="media"
-                                src={`${activeVideo}`}
-                                controls={false}
-                                style={{
-                                    width: "100%",
-                                    height: "100%",
-                                    // "--controls": "none",
-                                }}
-                            ></ReactPlayer>
-                            <MediaControlBar>
-                                <MediaPlayButton />
-                                <MediaSeekBackwardButton seekOffset={10} />
-                                <MediaSeekForwardButton seekOffset={10} />
-                                <MediaTimeRange />
-                                <MediaTimeDisplay showDuration />
-                                <MediaMuteButton />
-                                <MediaVolumeRange />
-                                <MediaPlaybackRateButton />
-                                <MediaFullscreenButton />
-                            </MediaControlBar>
-                        </MediaController>
+                                        return (
+                                            <div
+                                                key={item.id}
+                                                className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl border border-gray-200 hover:border-amber-400 bg-white hover:bg-amber-50/20 transition-all gap-4"
+                                            >
+                                                {/* Left: Media icon & Title */}
+                                                <div className="flex items-start sm:items-center gap-4 flex-1">
+                                                    {/* Play or Image Icon Button */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handlePreview(item)}
+                                                        className={`w-11 h-11 rounded-full flex items-center justify-center transition-all flex-shrink-0 shadow-sm ${
+                                                            isImageLesson
+                                                                ? "bg-purple-100 text-purple-700 hover:bg-purple-200"
+                                                                : "bg-amber-100 text-amber-800 hover:bg-amber-200"
+                                                        }`}
+                                                        title={isImageLesson ? "View Article & Image" : "Play Video Lesson"}
+                                                    >
+                                                        {isImageLesson ? (
+                                                            <ImageIcon size={20} />
+                                                        ) : (
+                                                            <Play size={18} className="ml-0.5" />
+                                                        )}
+                                                    </button>
 
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                                                            <h4 className="font-semibold text-gray-900 text-base truncate">
+                                                                {sIndex + 1}.{lIndex + 1} {item.title}
+                                                            </h4>
 
+                                                            {/* Format Badge */}
+                                                            {isImageLesson ? (
+                                                                <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 flex items-center gap-1">
+                                                                    <FileText size={12} /> Article
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1">
+                                                                    <Video size={12} /> Video
+                                                                </span>
+                                                            )}
 
-                    </div>
+                                                            {/* Duration Badge */}
+                                                            {durationStr && !isImageLesson && (
+                                                                <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200">
+                                                                    ⏱ {durationStr}
+                                                                </span>
+                                                            )}
+
+                                                            {/* Free Preview Badge */}
+                                                            {Boolean(item.is_free_preview) && (
+                                                                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                                                                    <Eye size={12} /> Free Preview
+                                                                </span>
+                                                            )}
+                                                        </div>
+
+                                                        {item.description && (
+                                                            <p className="text-xs text-gray-600 line-clamp-2 mt-0.5">
+                                                                {item.description}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* Right: Actions */}
+                                                <div className="flex items-center gap-2 self-end sm:self-center flex-shrink-0">
+                                                    {/* View / Play preview */}
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => handlePreview(item)}
+                                                        className="text-xs font-medium text-gray-700 hover:text-amber-700 hover:bg-amber-100/50 rounded-lg px-2.5"
+                                                    >
+                                                        {isImageLesson ? "View" : "Watch"}
+                                                    </Button>
+
+                                                    {/* Edit */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleUpdate(item.id)}
+                                                        className="p-2 border border-gray-300 rounded-lg text-gray-600 hover:text-amber-700 hover:border-amber-400 hover:bg-amber-50 transition"
+                                                        title="Edit Lesson"
+                                                    >
+                                                        <Edit3 size={16} />
+                                                    </button>
+
+                                                    {/* Delete */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleLessonDelete(item.id)}
+                                                        className="p-2 border border-gray-300 rounded-lg text-gray-600 hover:text-red-600 hover:border-red-400 hover:bg-red-50 transition"
+                                                        title="Delete Lesson"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             )}
 
+            {/* Bottom Actions */}
+            <div className="mt-12 flex items-center justify-end gap-4 border-t pt-6">
+                <Button
+                    onClick={() => {
+                        navigate("/dashboard/courses-management");
+                    }}
+                    variant="outline"
+                    className="rounded-full px-8 py-2.5 font-medium"
+                >
+                    Back to All Courses
+                </Button>
 
-            {/* =================== LESSON UPDATE MODAL =================== */}
+                <Button
+                    onClick={courseData?.is_published == 1 ? courseUnPublish : courseStatusUpdate}
+                    disabled={courseStatusLoading || unPublishLoading}
+                    className="bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] text-black font-semibold px-8 py-2.5 rounded-full shadow hover:opacity-95 transition"
+                >
+                    {courseStatusLoading || unPublishLoading ? (
+                        <div className="flex items-center gap-2">
+                            <Spinner />
+                            <span>Updating...</span>
+                        </div>
+                    ) : courseData?.is_published == 1 ? (
+                        "Unpublish Course"
+                    ) : (
+                        "Publish Course to Store"
+                    )}
+                </Button>
+            </div>
 
-            {updateModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-                    <div className="bg-white w-[90%] max-w-4xl rounded-xl relative flex flex-col max-h-[90vh]">
-
-                        {/* Header */}
-                        <div className="flex justify-end p-4 border-b">
+            {/* =================== VIDEO PREVIEW MODAL =================== */}
+            {videoModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+                    <div className="bg-white w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl relative">
+                        <div className="flex items-center justify-between p-4 border-b bg-gray-50">
+                            <div>
+                                <h4 className="font-bold text-gray-800 text-lg">
+                                    {activeLesson?.title || "Video Lesson"}
+                                </h4>
+                                <p className="text-xs text-gray-500">
+                                    Module: {activeLesson?.section_name || "General"}
+                                </p>
+                            </div>
                             <button
-                                onClick={() => setUpdateModal(false)}
-                                className="text-xl font-bold"
+                                onClick={() => setVideoModal(false)}
+                                className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-gray-700 transition"
                             >
-                                ✕
+                                <X size={18} />
                             </button>
                         </div>
 
-                        {/* Scrollable Content */}
-                        <div className="flex-1 overflow-y-auto p-4">
-                            {<LessonUpdate courseId={courseId} lessonId={lessonId?.toString()} setUpdateModal={setUpdateModal} />}
+                        <div className="p-4 bg-black">
+                            <MediaController
+                                style={{
+                                    width: "100%",
+                                    aspectRatio: "16/9",
+                                }}
+                            >
+                                <ReactPlayer
+                                    slot="media"
+                                    src={`${activeVideo}`}
+                                    controls={false}
+                                    style={{
+                                        width: "100%",
+                                        height: "100%",
+                                    }}
+                                />
+                                <MediaControlBar>
+                                    <MediaPlayButton />
+                                    <MediaSeekBackwardButton seekOffset={10} />
+                                    <MediaSeekForwardButton seekOffset={10} />
+                                    <MediaTimeRange />
+                                    <MediaTimeDisplay showDuration />
+                                    <MediaMuteButton />
+                                    <MediaVolumeRange />
+                                    <MediaPlaybackRateButton />
+                                    <MediaFullscreenButton />
+                                </MediaControlBar>
+                            </MediaController>
                         </div>
 
+                        {activeLesson?.description && (
+                            <div className="p-4 bg-white border-t">
+                                <h5 className="font-semibold text-sm text-gray-700 mb-1">Lesson Notes</h5>
+                                <p className="text-sm text-gray-600 whitespace-pre-line">
+                                    {activeLesson.description}
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
 
+            {/* =================== IMAGE & ARTICLE PREVIEW MODAL =================== */}
+            {imageModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+                    <div className="bg-white w-full max-w-3xl max-h-[90vh] rounded-2xl overflow-hidden shadow-2xl relative flex flex-col">
+                        <div className="flex items-center justify-between p-4 border-b bg-gray-50">
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700">
+                                        Article Lesson
+                                    </span>
+                                    <span className="text-xs text-gray-500 font-medium">
+                                        Module: {activeLesson?.section_name || "General"}
+                                    </span>
+                                </div>
+                                <h4 className="font-bold text-gray-800 text-xl mt-1">
+                                    {activeLesson?.title}
+                                </h4>
+                            </div>
+                            <button
+                                onClick={() => setImageModal(false)}
+                                className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-gray-700 transition"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
 
+                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                            {/* Graphic / Image */}
+                            {activeLesson?.image_url && (
+                                <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-gray-50 flex justify-center">
+                                    <img
+                                        src={activeLesson.image_url}
+                                        alt={activeLesson.title}
+                                        className="max-h-96 w-auto object-contain"
+                                    />
+                                </div>
+                            )}
 
+                            {/* Content */}
+                            <div>
+                                <h5 className="text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide">
+                                    Lesson Content
+                                </h5>
+                                <div className="text-gray-700 text-sm leading-relaxed whitespace-pre-line bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                    {activeLesson?.description || "No content provided for this lesson."}
+                                </div>
+                            </div>
+                        </div>
 
+                        <div className="p-4 border-t bg-gray-50 flex justify-end">
+                            <Button
+                                onClick={() => setImageModal(false)}
+                                className="bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] text-black font-semibold px-6 rounded-full"
+                            >
+                                Done
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
+            {/* =================== UPDATE MODAL =================== */}
+            {updateModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+                    <div className="bg-white w-full max-w-4xl rounded-2xl relative flex flex-col max-h-[90vh] shadow-2xl overflow-hidden">
+                        <div className="flex justify-end p-3 border-b bg-gray-50">
+                            <button
+                                onClick={() => setUpdateModal(false)}
+                                className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-gray-700 transition font-bold"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
 
-
-
-        </>
+                        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+                            <LessonUpdate
+                                courseId={courseId}
+                                lessonId={lessonId?.toString()}
+                                setUpdateModal={setUpdateModal}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 };
 

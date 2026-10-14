@@ -1,14 +1,20 @@
 export interface Lesson {
     id: number;
     course_id: number;
+    section_name?: string;
+    lesson_type?: "video" | "image";
     title: string;
     description: string;
-    video_type: "upload" | "youtube" | string;
-    video_path: string;
-    video_url: string;
+    image_path?: string | null;
+    image_url?: string | null;
+    video_type: "upload" | "youtube" | "url" | string;
+    video_path?: string | null;
+    video_url?: string | null;
+    duration?: number;
+    actual_duration?: string;
     duration_minutes: number | null;
     sort_order: number;
-    is_free_preview: number; // 0 | 1
+    is_free_preview: number | boolean;
     created_at: string;
     updated_at: string;
 }

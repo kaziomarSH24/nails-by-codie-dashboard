@@ -4,6 +4,8 @@ import {
     Search,
     ChevronLeft,
     ChevronRight,
+    Play,
+    Image as ImageIcon,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent } from "../../components/ui/card";
@@ -120,6 +122,14 @@ const CourseTable = () => {
     const courseTitle: CourseLessonType = courseDetails?.data;
     const lessonData: Lesson[] = courseDetails?.data?.lessons || [];
 
+    const groupedLessons = lessonData.reduce<Record<string, Lesson[]>>((acc, item) => {
+        const sec = item.section_name?.trim() || "General Lessons";
+        if (!acc[sec]) acc[sec] = [];
+        acc[sec].push(item);
+        return acc;
+    }, {});
+    const sectionNames = Object.keys(groupedLessons);
+
 
 
 
@@ -127,12 +137,20 @@ const CourseTable = () => {
 
     const [videoModal, setVideoModal] = useState<boolean>(false);
     const [videoUrl, setVideoUrl] = useState<string | null>(null);
+    const [imageModal, setImageModal] = useState<boolean>(false);
+    const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
 
-    const handlePlay = async (url: string) => {
-        setVideoUrl(url)
-        setCourseDetailsModal(false)
-        setVideoModal(!videoModal)
-    }
+    const handleLessonPreview = (item: Lesson) => {
+        setSelectedLesson(item);
+        if (item.lesson_type === "image" || (!item.video_url && item.image_url)) {
+            setImageModal(true);
+        } else if (item.video_url) {
+            setVideoUrl(item.video_url);
+            setVideoModal(true);
+        } else {
+            setImageModal(true);
+        }
+    };
 
     // =========================================== Course Publish Unpublish ========================================
 
@@ -317,98 +335,160 @@ const CourseTable = () => {
             </Dialog>
 
             {/* course details modal  */}
-            <Dialog open={courseDetailsModl} onOpenChange={setCourseDetailsModal} >
-
-                <DialogContent className="max-w-3xl overflow-y-auto max-h-[90vh] bg-slate-100  ">
-                    <div>
-                        <DialogTitle>{courseTitle?.title} Course Lessons</DialogTitle>
-                        <div className=" flex items-center justify-between " >
-                            <div className=" " >
-                                <h1>Instructor Name : {courseTitle?.instructor}</h1>
-                                <h1>Price : {courseTitle?.price}</h1>
-                                <h1>Reward Points : {courseTitle?.reward_points}</h1>
-                                <h1>Course Duraction: {courseTitle?.duration}</h1>
-                                <h1>Total Lesson : {courseTitle?.total_lessons}</h1>
+            <Dialog open={courseDetailsModl} onOpenChange={setCourseDetailsModal}>
+                <DialogContent className="max-w-4xl overflow-y-auto max-h-[90vh] bg-white p-6">
+                    <div className="border-b pb-4 mb-4">
+                        <DialogTitle className="text-2xl font-bold text-gray-800">
+                            {courseTitle?.title} — Curriculum & Details
+                        </DialogTitle>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <div className="space-y-1.5 text-sm text-gray-700">
+                                <p><span className="font-semibold text-gray-900">Instructor:</span> {courseTitle?.instructor}</p>
+                                <p><span className="font-semibold text-gray-900">Price:</span> £{courseTitle?.price}</p>
+                                <p><span className="font-semibold text-gray-900">Reward Points:</span> {courseTitle?.reward_points} pts</p>
+                                <p><span className="font-semibold text-gray-900">Duration:</span> {courseTitle?.duration || "N/A"}</p>
+                                <p><span className="font-semibold text-gray-900">Total Lessons:</span> {courseTitle?.total_lessons}</p>
                             </div>
-                            <div>
+                            {courseTitle?.thumbnail && (
                                 <img
                                     src={courseTitle?.thumbnail}
                                     alt={courseTitle?.title}
-                                    className="w-full  h-36 object-cover rounded-md"
+                                    className="w-48 h-32 object-cover rounded-lg border shadow-sm"
                                 />
-                            </div>
-                        </div>
-                        <div>
-                            {/* Anyone who has this link will be able to view this. */}
+                            )}
                         </div>
                     </div>
-                    <div className="flex items-center gap-2 -mt-30 ">
-                        <div>
-                            {lessonData.map((item, index) => (
-                                <div key={item.id} className="mt-6">
-                                    <div className=" max-w-3xl   px-6 py-3 rounded-[38px] border border-[#989898]">
-                                        {/* LEFT */}
-                                        <div className="flex items-center gap-x-6  w-full  ">
-                                            {/* ▶ Play icon */}
-                                            <div
-                                                className="cursor-pointer text-2xl "
-                                                onClick={() => handlePlay(item.video_url)}
-                                            >
-                                                ▶
-                                            </div>
 
-                                            <div>
-                                                <h1 className="font-medium">
-                                                    {index + 1}. {item.title}
-                                                </h1>
-                                                <p className="text-sm text-gray-600">
-                                                    {item.description}
-                                                </p>
+                    {/* Course Curriculum grouped by Modules */}
+                    <div className="space-y-5 my-2">
+                        <div className="flex items-center justify-between">
+                            <h3 className="font-bold text-lg text-gray-800">Course Curriculum</h3>
+                            <span className="text-xs text-gray-500 font-medium">
+                                {sectionNames.length} Modules • {lessonData.length} Lessons
+                            </span>
+                        </div>
+
+                        {lessonData.length === 0 ? (
+                            <p className="text-gray-500 text-sm py-6 text-center border border-dashed rounded-xl">
+                                No lessons added to this course yet.
+                            </p>
+                        ) : (
+                            sectionNames.map((secName, sIdx) => {
+                                const lessons = groupedLessons[secName];
+                                return (
+                                    <div key={secName} className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                                        <div className="bg-amber-50/70 px-4 py-2.5 border-b border-amber-100 flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <span className="w-6 h-6 rounded-md bg-amber-500 text-white font-bold flex items-center justify-center text-xs">
+                                                    {sIdx + 1}
+                                                </span>
+                                                <h4 className="font-bold text-gray-800 text-sm">
+                                                    {secName}
+                                                </h4>
                                             </div>
+                                            <span className="text-xs text-gray-500 font-medium">
+                                                {lessons.length} {lessons.length === 1 ? "lesson" : "lessons"}
+                                            </span>
                                         </div>
 
+                                        <div className="p-3 space-y-2">
+                                            {lessons.map((item, lIdx) => {
+                                                const isImage = item.lesson_type === "image" || Boolean(item.image_url && !item.video_url);
+                                                return (
+                                                    <div
+                                                        key={item.id}
+                                                        className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:border-amber-300 hover:bg-amber-50/10 transition gap-3"
+                                                    >
+                                                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleLessonPreview(item)}
+                                                                className={`w-9 h-9 rounded-full flex items-center justify-center transition flex-shrink-0 ${
+                                                                    isImage
+                                                                        ? "bg-purple-100 text-purple-700 hover:bg-purple-200"
+                                                                        : "bg-amber-100 text-amber-800 hover:bg-amber-200"
+                                                                }`}
+                                                                title={isImage ? "View Image / Article" : "Play Video"}
+                                                            >
+                                                                {isImage ? <ImageIcon size={16} /> : <Play size={14} className="ml-0.5" />}
+                                                            </button>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex flex-wrap items-center gap-2">
+                                                                    <span className="font-semibold text-sm text-gray-800 truncate">
+                                                                        {sIdx + 1}.{lIdx + 1} {item.title}
+                                                                    </span>
+                                                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                                                                        isImage ? "bg-purple-50 text-purple-700 border border-purple-200" : "bg-blue-50 text-blue-700 border border-blue-200"
+                                                                    }`}>
+                                                                        {isImage ? "Article" : "Video"}
+                                                                    </span>
+                                                                    {Boolean(item.is_free_preview) && (
+                                                                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">
+                                                                            Free Preview
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                {item.description && (
+                                                                    <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">
+                                                                        {item.description}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                        </div>
 
+                                                        <Button
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            onClick={() => handleLessonPreview(item)}
+                                                            className="text-xs font-semibold text-amber-800 hover:bg-amber-100/60"
+                                                        >
+                                                            {isImage ? "View" : "Watch"}
+                                                        </Button>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
-
-
-
-                        </div>
+                                );
+                            })
+                        )}
                     </div>
-                    <DialogFooter className="sm:justify-start">
+
+                    <DialogFooter className="border-t pt-4 mt-4">
                         <DialogClose asChild>
-                            <div className=" flex justify-end " >
-                                <Button type="button" className="bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] px-10 flex justify-end   "  >
-                                    Close
-                                </Button>
-                            </div>
+                            <Button type="button" className="bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] text-black font-semibold px-8 rounded-full">
+                                Close
+                            </Button>
                         </DialogClose>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
 
-
             {/* video play modal  */}
-
-
-            {
-                videoModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
-
-                        {/* Modal Card */}
-                        <div className="bg-white w-full max-w-4xl rounded-2xl p-6 relative animate-in fade-in zoom-in duration-200">
-
-                            {/* Close Button */}
+            {videoModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+                    <div className="bg-white w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl relative">
+                        <div className="flex items-center justify-between p-4 border-b bg-gray-50">
+                            <div>
+                                <h4 className="font-bold text-gray-800 text-lg">
+                                    {selectedLesson?.title || "Video Lesson"}
+                                </h4>
+                                <p className="text-xs text-gray-500">
+                                    Module: {selectedLesson?.section_name || "General"}
+                                </p>
+                            </div>
                             <button
                                 onClick={() => setVideoModal(false)}
-                                className="absolute  z-50 top-4 cursor-pointer right-4 text-gray-900 hover:text-gray-600 text-xl"
+                                className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-gray-700 transition"
                             >
                                 ✕
                             </button>
+                        </div>
+
+                        <div className="p-4 bg-black">
                             <MediaController
                                 style={{
-                                    width: "98%",
+                                    width: "100%",
                                     aspectRatio: "16/9",
                                 }}
                             >
@@ -419,9 +499,8 @@ const CourseTable = () => {
                                     style={{
                                         width: "100%",
                                         height: "100%",
-                                        // "--controls": "none",
                                     }}
-                                ></ReactPlayer>
+                                />
                                 <MediaControlBar>
                                     <MediaPlayButton />
                                     <MediaSeekBackwardButton seekOffset={10} />
@@ -434,13 +513,73 @@ const CourseTable = () => {
                                     <MediaFullscreenButton />
                                 </MediaControlBar>
                             </MediaController>
+                        </div>
 
+                        {selectedLesson?.description && (
+                            <div className="p-4 bg-white border-t">
+                                <h5 className="font-semibold text-xs text-gray-500 uppercase mb-1">Notes</h5>
+                                <p className="text-sm text-gray-700 whitespace-pre-line">
+                                    {selectedLesson.description}
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
 
-
+            {/* image / article preview modal */}
+            {imageModal && selectedLesson && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+                    <div className="bg-white w-full max-w-2xl max-h-[85vh] rounded-2xl overflow-hidden shadow-2xl relative flex flex-col">
+                        <div className="flex items-center justify-between p-4 border-b bg-gray-50">
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700">
+                                        Article Lesson
+                                    </span>
+                                    <span className="text-xs text-gray-500 font-medium">
+                                        Module: {selectedLesson.section_name || "General"}
+                                    </span>
+                                </div>
+                                <h4 className="font-bold text-gray-800 text-lg mt-1">
+                                    {selectedLesson.title}
+                                </h4>
+                            </div>
+                            <button
+                                onClick={() => setImageModal(false)}
+                                className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-gray-700"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                            {selectedLesson.image_url && (
+                                <div className="rounded-xl overflow-hidden border bg-gray-50 flex justify-center">
+                                    <img
+                                        src={selectedLesson.image_url}
+                                        alt={selectedLesson.title}
+                                        className="max-h-80 w-auto object-contain"
+                                    />
+                                </div>
+                            )}
+                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                <h5 className="font-semibold text-xs text-gray-500 uppercase mb-1">Content</h5>
+                                <p className="text-sm text-gray-700 whitespace-pre-line">
+                                    {selectedLesson.description || "No text content provided."}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="p-3 border-t bg-gray-50 flex justify-end">
+                            <Button
+                                onClick={() => setImageModal(false)}
+                                className="bg-gradient-to-b from-[#F2DA87] via-[#91741A] to-[#F2DA87] text-black font-semibold px-6 rounded-full"
+                            >
+                                Done
+                            </Button>
                         </div>
                     </div>
-                )
-            }
+                </div>
+            )}
 
         </div>
     );

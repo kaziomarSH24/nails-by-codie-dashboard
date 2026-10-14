@@ -179,7 +179,7 @@ export default function AddNewCourse() {
                                         message: "Price must be 0 or greater",
                                     },
                                 })}
-                                placeholder="$0.00"
+                                placeholder="£0.00"
                                 className="w-full mt-2"
                             />
                             {errors.price && (
