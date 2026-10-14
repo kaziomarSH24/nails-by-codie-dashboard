@@ -156,14 +156,24 @@ export const AddLeason = () => {
         videoEl.src = url;
 
         videoEl.onloadedmetadata = () => {
-            setUploadSize(videoEl.duration);
+            if (videoEl.duration && isFinite(videoEl.duration)) {
+                setUploadSize(videoEl.duration);
+                const totalSec = Math.round(videoEl.duration);
+                setDurationMinutes(Math.floor(totalSec / 60));
+                setDurationSeconds(totalSec % 60);
+            }
             URL.revokeObjectURL(url);
         };
         videoEl.onerror = () => {
             // Fallback audio check
             const audio = new Audio(url);
             audio.addEventListener("loadedmetadata", () => {
-                setUploadSize(audio.duration);
+                if (audio.duration && isFinite(audio.duration)) {
+                    setUploadSize(audio.duration);
+                    const totalSec = Math.round(audio.duration);
+                    setDurationMinutes(Math.floor(totalSec / 60));
+                    setDurationSeconds(totalSec % 60);
+                }
                 URL.revokeObjectURL(url);
             });
         };
@@ -196,6 +206,8 @@ export const AddLeason = () => {
     const [durationError, setDurationError] = useState<string>("");
     const [videoDuration, setVideoDuration] = useState("");
     const [videoMinutes, setVideoMinutes] = useState(0);
+    const [durationMinutes, setDurationMinutes] = useState<number>(0);
+    const [durationSeconds, setDurationSeconds] = useState<number>(0);
     const [timeLoading, setTimeLoading] = useState<boolean>(false);
 
     const extractVideoId = (url: string) => {
@@ -265,6 +277,15 @@ export const AddLeason = () => {
 
             setVideoDuration(formatted);
             setVideoMinutes(totalMinutes);
+
+            const matchDur = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+            if (matchDur) {
+                const hours = parseInt(matchDur[1] || "0");
+                const mins = parseInt(matchDur[2] || "0");
+                const secs = parseInt(matchDur[3] || "0");
+                setDurationMinutes(hours * 60 + mins);
+                setDurationSeconds(secs);
+            }
             setTimeLoading(false);
         } catch (err) {
             if (err instanceof Error) {
@@ -297,23 +318,21 @@ export const AddLeason = () => {
         formData.append("lesson_type", calculatedLessonType);
         formData.append("is_free_preview", isFreePreview ? "1" : "0");
 
+        const totalDuration = (durationMinutes * 60) + durationSeconds;
         if (hasVideo) {
             if (videoOption === "upload") {
                 formData.append("video_type", "upload");
                 formData.append("video_path", videoPath);
-                if (uploadSize) {
-                    formData.append("duration", String(Math.ceil(uploadSize)));
-                }
             } else {
                 if (data?.video_url) {
                     formData.append("video_url", data.video_url.trim());
                     formData.append("video_type", "url");
-                    const dur = (videoMinutes * 60) || (uploadSize && uploadSize > 0 ? Math.ceil(uploadSize) : 0);
-                    if (dur > 0) {
-                        formData.append("duration", String(dur));
-                    }
                 }
             }
+            formData.append(
+                "duration",
+                String(totalDuration > 0 ? totalDuration : (uploadSize ? Math.ceil(uploadSize) : 0))
+            );
         } else {
             formData.append("duration", "0");
         }
@@ -337,6 +356,8 @@ export const AddLeason = () => {
                     setImagePreview(null);
                     setUploadSize(undefined);
                     setProgress(0);
+                    setDurationMinutes(0);
+                    setDurationSeconds(0);
                     if (fileInputRef.current) fileInputRef.current.value = "";
                     if (imageInputRef.current) imageInputRef.current.value = "";
                 }
@@ -636,6 +657,43 @@ export const AddLeason = () => {
                                                 <MediaFullscreenButton />
                                             </MediaControlBar>
                                         </MediaController>
+                                    </div>
+                                )}
+
+                                {/* Video Duration Editor (Auto-detected & Editable) */}
+                                {(videoPath || preview) && (
+                                    <div className="mt-4 p-3.5 bg-amber-50/70 border border-amber-200 rounded-xl flex flex-wrap items-center justify-between gap-3">
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                                                ⏱ Video Duration:
+                                            </span>
+                                            <div className="flex items-center gap-1.5">
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    value={durationMinutes || ""}
+                                                    onChange={(e) => setDurationMinutes(Math.max(0, parseInt(e.target.value) || 0))}
+                                                    className="w-16 px-2.5 py-1 text-sm border border-gray-300 rounded-lg bg-white text-center font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm"
+                                                    placeholder="0"
+                                                />
+                                                <span className="text-xs text-gray-600 font-semibold">min</span>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    max="59"
+                                                    value={durationSeconds || ""}
+                                                    onChange={(e) => setDurationSeconds(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
+                                                    className="w-16 px-2.5 py-1 text-sm border border-gray-300 rounded-lg bg-white text-center font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm"
+                                                    placeholder="0"
+                                                />
+                                                <span className="text-xs text-gray-600 font-semibold">sec</span>
+                                            </div>
+                                        </div>
+                                        <span className="text-[11px] text-amber-900/80 font-medium">
+                                            {durationMinutes > 0 || durationSeconds > 0
+                                                ? `Total: ${durationMinutes}m ${durationSeconds}s`
+                                                : "Auto-detected or enter duration manually"}
+                                        </span>
                                     </div>
                                 )}
                             </div>

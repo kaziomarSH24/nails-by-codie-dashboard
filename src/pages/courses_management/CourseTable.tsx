@@ -624,6 +624,11 @@ const CourseTable = () => {
                                                                             <ImageIcon size={10} /> + Graphic
                                                                         </span>
                                                                     )}
+                                                                    {Boolean(!isImage && Number(item.duration) > 0) && (
+                                                                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200">
+                                                                            ⏱ {Math.floor(Number(item.duration) / 60)}m {Number(item.duration) % 60 > 0 ? `${Number(item.duration) % 60}s` : ""}
+                                                                        </span>
+                                                                    )}
                                                                     {Boolean(item.is_free_preview) && (
                                                                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">
                                                                             Free Preview
