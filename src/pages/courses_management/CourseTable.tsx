@@ -325,12 +325,17 @@ const CourseTable = () => {
                                                     £{course.price}
                                                 </div>
                                                 <div className="flex items-center gap-2 text-xs text-slate-500">
-                                                    {course.duration && (
-                                                        <span className="flex items-center gap-1">
-                                                            <Clock size={11} className="text-slate-400" />
-                                                            {course.duration}
+                                                    {course.actual_duration ? (
+                                                        <span className="flex items-center gap-1 font-medium text-slate-700" title="Calculated from lessons duration">
+                                                            <Clock size={11} className="text-amber-600" />
+                                                            {course.actual_duration}
                                                         </span>
-                                                    )}
+                                                    ) : Number(course.total_lessons) > 0 ? (
+                                                        <span className="flex items-center gap-1 text-slate-400" title="Self-paced">
+                                                            <Clock size={11} className="text-slate-400" />
+                                                            Self-paced
+                                                        </span>
+                                                    ) : null}
                                                     {Boolean(course.reward_points) && (
                                                         <span className="inline-flex items-center gap-0.5 text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded text-[10px] font-medium border border-amber-200/60">
                                                             <Award size={10} /> {course.reward_points} pts

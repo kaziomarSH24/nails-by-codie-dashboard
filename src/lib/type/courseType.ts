@@ -18,6 +18,7 @@ export type CourseType = {
     reward_points: string;
     is_published: boolean; // 0 for draft, 1 for published
     duration: string; // e.g., "5 hours"
+    actual_duration?: string | null;
     total_lessons?: number;
     created_at: string; // ISO datetime string
     updated_at: string; // ISO datetime string
