@@ -120,10 +120,20 @@ const CourseTable = () => {
     // ====================== course details ============================
     const [courseDetailsModl, setCourseDetailsModal] = useState<boolean>(false);
     const [courseId, setCourseId] = useState<number | undefined>(undefined);
+    const [viewingCourse, setViewingCourse] = useState<CourseType | null>(null);
 
-    const handleCourseDetails = async (id: number) => {
+    const handleCourseDetails = (course: CourseType) => {
+        setViewingCourse(course);
+        setCourseId(course.id);
         setCourseDetailsModal(true);
-        setCourseId(id);
+    };
+
+    const resolveImageUrl = (img?: string | null) => {
+        if (!img) return "";
+        if (img.startsWith("http://") || img.startsWith("https://")) return img;
+        const clean = img.startsWith("/") ? img : `/${img}`;
+        const storagePath = clean.startsWith("/storage/") ? clean : `/storage${clean}`;
+        return `${import.meta.env.VITE_BASE_URL}${storagePath}`;
     };
 
     const { data: courseDetails } = useGetLessonByCourseIdQuery(courseId);
@@ -406,7 +416,7 @@ const CourseTable = () => {
                                                 {/* Icon Actions: View, Edit, Delete */}
                                                 <div className="flex items-center gap-1 pl-1 border-l border-gray-200">
                                                     <button
-                                                        onClick={() => handleCourseDetails(course.id)}
+                                                        onClick={() => handleCourseDetails(course)}
                                                         className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:text-amber-800 hover:bg-amber-50 hover:border-amber-300 transition"
                                                         title="View Curriculum & Lessons"
                                                     >
@@ -528,20 +538,20 @@ const CourseTable = () => {
                 <DialogContent className="max-w-4xl overflow-y-auto max-h-[90vh] bg-white p-6">
                     <div className="border-b pb-4 mb-4">
                         <DialogTitle className="text-2xl font-bold text-gray-800">
-                            {courseTitle?.title} — Curriculum & Details
+                            {viewingCourse?.title || courseTitle?.title} — Curriculum & Details
                         </DialogTitle>
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
                             <div className="space-y-1.5 text-sm text-gray-700">
-                                <p><span className="font-semibold text-gray-900">Instructor:</span> {courseTitle?.instructor}</p>
-                                <p><span className="font-semibold text-gray-900">Price:</span> £{courseTitle?.price}</p>
-                                <p><span className="font-semibold text-gray-900">Reward Points:</span> {courseTitle?.reward_points} pts</p>
-                                <p><span className="font-semibold text-gray-900">Duration:</span> {courseTitle?.duration || "N/A"}</p>
-                                <p><span className="font-semibold text-gray-900">Total Lessons:</span> {courseTitle?.total_lessons}</p>
+                                <p><span className="font-semibold text-gray-900">Instructor:</span> {viewingCourse?.instructor || courseTitle?.instructor || "N/A"}</p>
+                                <p><span className="font-semibold text-gray-900">Price:</span> £{viewingCourse?.price ?? courseTitle?.price ?? "0.00"}</p>
+                                <p><span className="font-semibold text-gray-900">Reward Points:</span> {viewingCourse?.reward_points ?? courseTitle?.reward_points ?? 0} pts</p>
+                                <p><span className="font-semibold text-gray-900">Duration:</span> {viewingCourse?.actual_duration || courseTitle?.actual_duration || (lessonData.length > 0 ? "Self-paced" : "N/A")}</p>
+                                <p><span className="font-semibold text-gray-900">Total Lessons:</span> {lessonData.length || viewingCourse?.total_lessons || courseTitle?.total_lessons || 0}</p>
                             </div>
-                            {courseTitle?.thumbnail && (
+                            {(viewingCourse?.thumbnail || courseTitle?.thumbnail) && (
                                 <img
-                                    src={courseTitle?.thumbnail}
-                                    alt={courseTitle?.title}
+                                    src={resolveImageUrl(viewingCourse?.thumbnail || courseTitle?.thumbnail)}
+                                    alt={viewingCourse?.title || courseTitle?.title}
                                     className="w-48 h-32 object-cover rounded-lg border shadow-sm"
                                 />
                             )}
@@ -655,7 +665,7 @@ const CourseTable = () => {
 
             {/* video play modal  */}
             {videoModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 backdrop-blur-md px-4">
                     <div className="bg-white w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl relative">
                         <div className="flex items-center justify-between p-4 border-b bg-gray-50">
                             <div>
@@ -667,7 +677,10 @@ const CourseTable = () => {
                                 </p>
                             </div>
                             <button
-                                onClick={() => setVideoModal(false)}
+                                onClick={() => {
+                                    setVideoModal(false);
+                                    setVideoUrl(null);
+                                }}
                                 className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-gray-700 transition"
                             >
                                 ✕
@@ -718,7 +731,7 @@ const CourseTable = () => {
 
             {/* image / article preview modal */}
             {imageModal && selectedLesson && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 backdrop-blur-md px-4">
                     <div className="bg-white w-full max-w-2xl max-h-[85vh] rounded-2xl overflow-hidden shadow-2xl relative flex flex-col">
                         <div className="flex items-center justify-between p-4 border-b bg-gray-50">
                             <div>
@@ -745,7 +758,7 @@ const CourseTable = () => {
                             {selectedLesson.image_url && (
                                 <div className="rounded-xl overflow-hidden border bg-gray-50 flex justify-center">
                                     <img
-                                        src={selectedLesson.image_url}
+                                        src={resolveImageUrl(selectedLesson.image_url)}
                                         alt={selectedLesson.title}
                                         className="max-h-80 w-auto object-contain"
                                     />

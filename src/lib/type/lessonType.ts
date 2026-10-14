@@ -29,6 +29,7 @@ export interface CourseLessonType {
     reward_points: number;
     is_published: number; // 0 | 1
     duration: string;
+    actual_duration?: string | null;
     created_at: string;
     total_lessons: number;
     updated_at: string;

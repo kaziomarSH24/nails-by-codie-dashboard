@@ -448,10 +448,17 @@ const CourseLesson = ({ id }: CourseLessonProps) => {
 
                         <div className="flex-1 overflow-y-auto p-6 space-y-6">
                             {/* Graphic / Image */}
-                            {activeLesson?.image_url && (
+                            {(activeLesson?.image_url || activeLesson?.image_path) && (
                                 <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-gray-50 flex justify-center">
                                     <img
-                                        src={activeLesson.image_url}
+                                        src={(() => {
+                                            const target = activeLesson.image_url || activeLesson.image_path;
+                                            if (!target) return "";
+                                            if (target.startsWith("http://") || target.startsWith("https://")) return target;
+                                            const clean = target.startsWith("/") ? target : `/${target}`;
+                                            const storagePath = clean.startsWith("/storage/") ? clean : `/storage${clean}`;
+                                            return `${import.meta.env.VITE_BASE_URL}${storagePath}`;
+                                        })()}
                                         alt={activeLesson.title}
                                         className="max-h-96 w-auto object-contain"
                                     />

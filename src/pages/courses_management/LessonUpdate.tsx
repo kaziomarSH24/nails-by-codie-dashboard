@@ -109,8 +109,17 @@ export const LessonUpdate = ({ lessonId, courseId, setUpdateModal }: LessonUpdat
             }
 
             // Populate image data
-            if (data.image_path) {
-                setImagePreview(data.image_url || `${import.meta.env.VITE_BASE_URL}/storage/${data.image_path}`);
+            const rawImage = data.image_url || data.image_path;
+            if (rawImage) {
+                if (rawImage.startsWith("http://") || rawImage.startsWith("https://")) {
+                    setImagePreview(rawImage);
+                } else {
+                    const clean = rawImage.startsWith("/") ? rawImage : `/${rawImage}`;
+                    const storagePath = clean.startsWith("/storage/") ? clean : `/storage${clean}`;
+                    setImagePreview(`${import.meta.env.VITE_BASE_URL}${storagePath}`);
+                }
+            } else {
+                setImagePreview(null);
             }
         }
     }, [singleLesson?.data]);
