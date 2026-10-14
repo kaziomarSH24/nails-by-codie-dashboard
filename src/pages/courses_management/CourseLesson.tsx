@@ -261,6 +261,12 @@ const CourseLesson = ({ id }: CourseLessonProps) => {
                                                                 </span>
                                                             )}
 
+                                                            {Boolean(item.video_url && item.image_url) && (
+                                                                <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 flex items-center gap-1">
+                                                                    <ImageIcon size={11} /> + Graphic
+                                                                </span>
+                                                            )}
+
                                                             {/* Duration Badge */}
                                                             {durationStr && !isImageLesson && (
                                                                 <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200">
@@ -371,7 +377,10 @@ const CourseLesson = ({ id }: CourseLessonProps) => {
                                 </p>
                             </div>
                             <button
-                                onClick={() => setVideoModal(false)}
+                                onClick={() => {
+                                    setVideoModal(false);
+                                    setActiveVideo(null);
+                                }}
                                 className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-gray-700 transition"
                             >
                                 <X size={18} />
@@ -408,12 +417,37 @@ const CourseLesson = ({ id }: CourseLessonProps) => {
                             </MediaController>
                         </div>
 
-                        {activeLesson?.description && (
-                            <div className="p-4 bg-white border-t">
-                                <h5 className="font-semibold text-sm text-gray-700 mb-1">Lesson Notes</h5>
-                                <p className="text-sm text-gray-600 whitespace-pre-line">
-                                    {activeLesson.description}
-                                </p>
+                        {(activeLesson?.image_url || activeLesson?.image_path || activeLesson?.description) && (
+                            <div className="p-4 bg-white border-t space-y-3 max-h-72 overflow-y-auto">
+                                {(activeLesson?.image_url || activeLesson?.image_path) && (
+                                    <div>
+                                        <h5 className="font-semibold text-xs text-gray-500 uppercase mb-2 flex items-center gap-1.5">
+                                            <ImageIcon size={13} className="text-amber-600" /> Attached Reference Image / Graphic
+                                        </h5>
+                                        <div className="rounded-xl overflow-hidden border bg-gray-50 flex justify-center max-w-sm">
+                                            <img
+                                                src={(() => {
+                                                    const target = activeLesson.image_url || activeLesson.image_path;
+                                                    if (!target) return "";
+                                                    if (target.startsWith("http://") || target.startsWith("https://")) return target;
+                                                    const clean = target.startsWith("/") ? target : `/${target}`;
+                                                    const storagePath = clean.startsWith("/storage/") ? clean : `/storage${clean}`;
+                                                    return `${import.meta.env.VITE_BASE_URL}${storagePath}`;
+                                                })()}
+                                                alt={activeLesson?.title}
+                                                className="max-h-56 w-auto object-contain"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                                {activeLesson?.description && (
+                                    <div>
+                                        <h5 className="font-semibold text-xs text-gray-500 uppercase mb-1">Notes & Instructions</h5>
+                                        <p className="text-sm text-gray-700 whitespace-pre-line">
+                                            {activeLesson.description}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>

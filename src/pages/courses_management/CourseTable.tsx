@@ -621,6 +621,11 @@ const CourseTable = () => {
                                                                     }`}>
                                                                         {isImage ? "Article" : "Video"}
                                                                     </span>
+                                                                    {Boolean(item.video_url && item.image_url) && (
+                                                                        <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-purple-50 text-purple-700 border border-purple-200 flex items-center gap-1">
+                                                                            <ImageIcon size={10} /> + Graphic
+                                                                        </span>
+                                                                    )}
                                                                     {Boolean(item.is_free_preview) && (
                                                                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">
                                                                             Free Preview
@@ -717,12 +722,30 @@ const CourseTable = () => {
                             </MediaController>
                         </div>
 
-                        {selectedLesson?.description && (
-                            <div className="p-4 bg-white border-t">
-                                <h5 className="font-semibold text-xs text-gray-500 uppercase mb-1">Notes</h5>
-                                <p className="text-sm text-gray-700 whitespace-pre-line">
-                                    {selectedLesson.description}
-                                </p>
+                        {(selectedLesson?.image_url || selectedLesson?.description) && (
+                            <div className="p-4 bg-white border-t space-y-3 max-h-72 overflow-y-auto">
+                                {selectedLesson.image_url && (
+                                    <div>
+                                        <h5 className="font-semibold text-xs text-gray-500 uppercase mb-2 flex items-center gap-1.5">
+                                            <ImageIcon size={13} className="text-amber-600" /> Attached Reference Image / Graphic
+                                        </h5>
+                                        <div className="rounded-xl overflow-hidden border bg-gray-50 flex justify-center max-w-sm">
+                                            <img
+                                                src={resolveImageUrl(selectedLesson.image_url)}
+                                                alt={selectedLesson.title}
+                                                className="max-h-56 w-auto object-contain"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                                {selectedLesson.description && (
+                                    <div>
+                                        <h5 className="font-semibold text-xs text-gray-500 uppercase mb-1">Notes & Instructions</h5>
+                                        <p className="text-sm text-gray-700 whitespace-pre-line">
+                                            {selectedLesson.description}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>

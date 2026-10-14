@@ -314,10 +314,12 @@ export const AddLeason = () => {
             }
         } else {
             // Article / Image Lesson
-            if (imageFile) {
-                formData.append("image", imageFile);
-            }
             formData.append("duration", "0");
+        }
+
+        // Attach image if uploaded (supported for both video and article lessons)
+        if (imageFile) {
+            formData.append("image", imageFile);
         }
 
         try {
@@ -513,8 +515,8 @@ export const AddLeason = () => {
                             </div>
                         </div>
 
-                        {/* 5. Conditional Media Section: Video or Image */}
-                        {lessonType === "video" ? (
+                        {/* 5. Video Source Section (Only for Video Lessons) */}
+                        {lessonType === "video" && (
                             <div className="mb-6 p-5 border rounded-xl bg-gray-50/50">
                                 <label className="block text-base font-semibold text-gray-700 mb-3">
                                     Video Source
@@ -671,54 +673,62 @@ export const AddLeason = () => {
                                     </div>
                                 )}
                             </div>
-                        ) : (
-                            /* Article / Image Uploader */
-                            <div className="mb-6 p-5 border rounded-xl bg-gray-50/50">
-                                <label className="block text-base font-semibold text-gray-700 mb-2">
-                                    Lesson Image / Diagram (Optional)
-                                </label>
-                                <p className="text-xs text-gray-500 mb-3">
-                                    Upload an illustrative image, infographics, or manual page for this article lesson.
-                                </p>
-
-                                {imagePreview ? (
-                                    <div className="relative border rounded-xl overflow-hidden bg-white max-w-md shadow-sm">
-                                        <img
-                                            src={imagePreview}
-                                            alt="Lesson Preview"
-                                            className="w-full h-64 object-cover"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={handleRemoveImage}
-                                            className="absolute top-3 right-3 bg-red-600 text-white rounded-full p-1.5 shadow hover:bg-red-700 transition"
-                                            title="Remove Image"
-                                        >
-                                            <X size={18} />
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <label className="w-full h-40 border-2 border-dashed border-gray-300 hover:border-amber-400 rounded-xl flex flex-col items-center justify-center cursor-pointer bg-white transition">
-                                        <ImageIcon size={32} className="text-gray-400 mb-2" />
-                                        <p className="font-medium text-gray-700">Click to upload lesson image</p>
-                                        <p className="text-xs text-gray-400 mt-1">PNG, JPG, JPEG, WEBP up to 10MB</p>
-                                        <input
-                                            ref={imageInputRef}
-                                            type="file"
-                                            accept="image/*"
-                                            className="hidden"
-                                            onChange={handleImageChange}
-                                        />
-                                    </label>
-                                )}
-
-                                {imageFile && (
-                                    <p className="font-semibold text-sm mt-3 text-green-600 flex items-center gap-1.5">
-                                        ✓ Image selected: {imageFile.name} (will be saved when lesson is created)
-                                    </p>
-                                )}
-                            </div>
                         )}
+
+                        {/* 6. Lesson Graphic / Reference Image (Available for both Video and Article) */}
+                        <div className="mb-6 p-5 border rounded-xl bg-gray-50/50">
+                            <label className="block text-base font-semibold text-gray-700 mb-1">
+                                {lessonType === "video"
+                                    ? "Attached Reference Graphic / Image (Optional)"
+                                    : "Lesson Image / Diagram (Optional)"}
+                            </label>
+                            <p className="text-xs text-gray-500 mb-3">
+                                {lessonType === "video"
+                                    ? "Attach an illustrative photo, nail art diagram, or step sheet to accompany this video lesson."
+                                    : "Upload an illustrative image, infographics, or manual page for this article lesson."}
+                            </p>
+
+                            {imagePreview ? (
+                                <div className="relative border rounded-xl overflow-hidden bg-white max-w-md shadow-sm">
+                                    <img
+                                        src={imagePreview}
+                                        alt="Lesson Preview"
+                                        className="w-full h-64 object-cover"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={handleRemoveImage}
+                                        className="absolute top-3 right-3 bg-red-600 text-white rounded-full p-1.5 shadow hover:bg-red-700 transition"
+                                        title="Remove Image"
+                                    >
+                                        <X size={18} />
+                                    </button>
+                                </div>
+                            ) : (
+                                <label className="w-full h-40 border-2 border-dashed border-gray-300 hover:border-amber-400 rounded-xl flex flex-col items-center justify-center cursor-pointer bg-white transition">
+                                    <ImageIcon size={32} className="text-gray-400 mb-2" />
+                                    <p className="font-medium text-gray-700">
+                                        {lessonType === "video"
+                                            ? "Click to attach reference image"
+                                            : "Click to upload lesson image"}
+                                    </p>
+                                    <p className="text-xs text-gray-400 mt-1">PNG, JPG, JPEG, WEBP up to 10MB</p>
+                                    <input
+                                        ref={imageInputRef}
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={handleImageChange}
+                                    />
+                                </label>
+                            )}
+
+                            {imageFile && (
+                                <p className="font-semibold text-sm mt-3 text-green-600 flex items-center gap-1.5">
+                                    ✓ Image selected: {imageFile.name} (will be saved when lesson is created)
+                                </p>
+                            )}
+                        </div>
 
                         {/* 6. Free Preview Checkbox */}
                         <div className="mb-8 flex items-center gap-3 p-3.5 bg-gray-50 rounded-xl border border-gray-200">
