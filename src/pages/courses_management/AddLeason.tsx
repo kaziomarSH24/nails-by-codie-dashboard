@@ -67,9 +67,13 @@ export const AddLeason = () => {
     const [isUpload, setIsUpload] = useState<boolean>(false);
     const [uploadSize, setUploadSize] = useState<number>();
 
-    // Image states (file held locally until form submission)
-    const [imageFile, setImageFile] = useState<File | null>(null);
-    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    // Image states (supports multiple images/pages held locally until form submission)
+    interface ImageItem {
+        id: string;
+        file: File;
+        previewUrl: string;
+    }
+    const [imageItems, setImageItems] = useState<ImageItem[]>([]);
 
     const resumableRef = useRef<Resumable | null>(null);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -179,21 +183,34 @@ export const AddLeason = () => {
         };
     };
 
-    // -------------------- Image Handler (Local Preview only) --------------------
+    // -------------------- Image Handler (Multiple Local Previews) --------------------
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
 
-        setImageFile(file);
-        setImagePreview(URL.createObjectURL(file));
+        const newItems: ImageItem[] = files.map((file) => ({
+            id: `${file.name}-${Date.now()}-${Math.random()}`,
+            file,
+            previewUrl: URL.createObjectURL(file),
+        }));
+
+        setImageItems((prev) => [...prev, ...newItems]);
+        if (imageInputRef.current) {
+            imageInputRef.current.value = "";
+        }
     };
 
-    const handleRemoveImage = () => {
-        if (imagePreview) {
-            URL.revokeObjectURL(imagePreview);
-        }
-        setImagePreview(null);
-        setImageFile(null);
+    const handleRemoveImageItem = (idToRemove: string) => {
+        setImageItems((prev) => {
+            const item = prev.find((x) => x.id === idToRemove);
+            if (item) URL.revokeObjectURL(item.previewUrl);
+            return prev.filter((x) => x.id !== idToRemove);
+        });
+    };
+
+    const handleClearAllImages = () => {
+        imageItems.forEach((x) => URL.revokeObjectURL(x.previewUrl));
+        setImageItems([]);
         if (imageInputRef.current) {
             imageInputRef.current.value = "";
         }
@@ -301,11 +318,11 @@ export const AddLeason = () => {
     // -------------------- Submit Handler --------------------
     const onSubmit = async (data: FormValues) => {
         const hasVideo = (videoOption === "upload" && Boolean(videoPath)) || (videoOption === "url" && Boolean(data?.video_url && data.video_url.trim().length > 0));
-        const hasImage = Boolean(imageFile);
+        const hasImage = imageItems.length > 0;
         const hasText = Boolean(data.description && data.description.trim().length > 0);
 
         if (!hasVideo && !hasImage && !hasText) {
-            toast.error("Please provide at least a video, an image, or lesson text content.");
+            toast.error("Please provide at least a video, image(s), or lesson text content.");
             return;
         }
 
@@ -337,10 +354,10 @@ export const AddLeason = () => {
             formData.append("duration", "0");
         }
 
-        // Attach image if uploaded (supported alongside video)
-        if (imageFile) {
-            formData.append("image", imageFile);
-        }
+        // Attach image(s) if uploaded (supported alongside video)
+        imageItems.forEach((item) => {
+            formData.append("images[]", item.file);
+        });
 
         try {
             const confirmed = await uploadAlert();
@@ -352,8 +369,7 @@ export const AddLeason = () => {
                     setIsUpload(false);
                     setVideoPath("");
                     setPreview(undefined);
-                    setImageFile(null);
-                    setImagePreview(null);
+                    handleClearAllImages();
                     setUploadSize(undefined);
                     setProgress(0);
                     setDurationMinutes(0);
@@ -698,52 +714,95 @@ export const AddLeason = () => {
                                 )}
                             </div>
 
-                        {/* 6. Lesson Graphic / Reference Image (Optional) */}
+                        {/* 6. Lesson Graphic / Reference Images (Optional) */}
                         <div className="mb-6 p-5 border rounded-xl bg-gray-50/50">
-                            <label className="block text-base font-semibold text-gray-700 mb-1">
-                                Lesson Graphic / Reference Image (Optional)
-                            </label>
-                            <p className="text-xs text-gray-500 mb-3">
-                                Attach an illustrative photo, nail art diagram, or step sheet to accompany this lesson.
+                            <div className="flex items-center justify-between mb-1">
+                                <label className="block text-base font-semibold text-gray-700">
+                                    Lesson Graphics / Document Pages (Optional)
+                                </label>
+                                {imageItems.length > 0 && (
+                                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                                        {imageItems.length} {imageItems.length === 1 ? "Page / Image" : "Pages / Images"} selected
+                                    </span>
+                                )}
+                            </div>
+                            <p className="text-xs text-gray-500 mb-4">
+                                Attach single or multiple document pages, illustrative photos, nail art step sheets, or Canva exports to accompany this lesson.
                             </p>
 
-                            {imagePreview ? (
-                                <div className="relative border rounded-xl overflow-hidden bg-slate-50 max-w-xl shadow-sm flex justify-center p-2">
-                                    <img
-                                        src={imagePreview}
-                                        alt="Lesson Preview"
-                                        className="w-full max-h-96 object-contain rounded-lg"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={handleRemoveImage}
-                                        className="absolute top-3 right-3 bg-red-600 text-white rounded-full p-1.5 shadow hover:bg-red-700 transition"
-                                        title="Remove Image"
-                                    >
-                                        <X size={18} />
-                                    </button>
+                            {/* Grid of selected images */}
+                            {imageItems.length > 0 && (
+                                <div className="space-y-4 mb-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                                        {imageItems.map((item, index) => (
+                                            <div
+                                                key={item.id}
+                                                className="relative border rounded-xl overflow-hidden bg-white shadow-sm flex flex-col p-2 group"
+                                            >
+                                                <div className="flex items-center justify-between mb-1.5 px-1">
+                                                    <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                                                        Page {index + 1}
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleRemoveImageItem(item.id)}
+                                                        className="w-6 h-6 bg-red-100 hover:bg-red-600 text-red-600 hover:text-white rounded-full flex items-center justify-center transition"
+                                                        title="Remove page"
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                </div>
+                                                <div className="rounded-lg overflow-hidden bg-slate-50 flex items-center justify-center h-48 border border-slate-100">
+                                                    <img
+                                                        src={item.previewUrl}
+                                                        alt={`Page ${index + 1}`}
+                                                        className="w-full h-full object-contain"
+                                                    />
+                                                </div>
+                                                <p className="text-[11px] text-gray-500 truncate mt-1 px-1" title={item.file.name}>
+                                                    {item.file.name}
+                                                </p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="flex items-center justify-between pt-1">
+                                        <label className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg cursor-pointer transition">
+                                            <Upload size={14} /> Add more pages / images
+                                            <input
+                                                type="file"
+                                                multiple
+                                                accept="image/*"
+                                                className="hidden"
+                                                onChange={handleImageChange}
+                                            />
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={handleClearAllImages}
+                                            className="text-xs text-red-600 hover:underline font-medium"
+                                        >
+                                            Remove all
+                                        </button>
+                                    </div>
                                 </div>
-                            ) : (
-                                <label className="w-full h-40 border-2 border-dashed border-gray-300 hover:border-amber-400 rounded-xl flex flex-col items-center justify-center cursor-pointer bg-white transition">
+                            )}
+
+                            {imageItems.length === 0 && (
+                                <label className="w-full h-36 border-2 border-dashed border-gray-300 hover:border-amber-400 rounded-xl flex flex-col items-center justify-center cursor-pointer bg-white transition hover:bg-amber-50/20">
                                     <ImageIcon size={32} className="text-gray-400 mb-2" />
                                     <p className="font-medium text-gray-700">
-                                        Click to upload graphic / reference image
+                                        Click to upload graphics / document pages
                                     </p>
-                                    <p className="text-xs text-gray-400 mt-1">PNG, JPG, JPEG, WEBP up to 10MB</p>
+                                    <p className="text-xs text-gray-400 mt-1">Select one or multiple PNG, JPG, JPEG, WEBP files (up to 10MB each)</p>
                                     <input
                                         ref={imageInputRef}
                                         type="file"
+                                        multiple
                                         accept="image/*"
                                         className="hidden"
                                         onChange={handleImageChange}
                                     />
                                 </label>
-                            )}
-
-                            {imageFile && (
-                                <p className="font-semibold text-sm mt-3 text-green-600 flex items-center gap-1.5">
-                                    ✓ Image selected: {imageFile.name} (will be saved when lesson is created)
-                                </p>
                             )}
                         </div>
 

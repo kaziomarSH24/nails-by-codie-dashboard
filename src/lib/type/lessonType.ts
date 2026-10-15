@@ -7,6 +7,8 @@ export interface Lesson {
     description: string;
     image_path?: string | null;
     image_url?: string | null;
+    images?: string[];
+    image_paths?: string[];
     video_type: "upload" | "youtube" | "url" | string;
     video_path?: string | null;
     video_url?: string | null;

@@ -486,38 +486,63 @@ const CourseLesson = ({ id }: CourseLessonProps) => {
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
-                            {/* Graphic / Image */}
-                            {(activeLesson?.image_url || activeLesson?.image_path) && (() => {
-                                const target = activeLesson.image_url || activeLesson.image_path;
-                                if (!target) return null;
-                                const clean = target.startsWith("/") ? target : `/${target}`;
-                                const storagePath = clean.startsWith("/storage/") ? clean : `/storage${clean}`;
-                                const fullUrl = target.startsWith("http://") || target.startsWith("https://")
-                                    ? target
-                                    : `${import.meta.env.VITE_BASE_URL}${storagePath}`;
+                            {/* Graphic / Image Pages */}
+                            {(() => {
+                                const rawImages: string[] = Array.isArray(activeLesson?.images) && activeLesson.images.length > 0
+                                    ? activeLesson.images
+                                    : (activeLesson?.image_url
+                                        ? [activeLesson.image_url]
+                                        : (activeLesson?.image_path
+                                            ? (() => {
+                                                const p = activeLesson.image_path;
+                                                if (typeof p === "string" && p.startsWith("[") && p.endsWith("]")) {
+                                                    try { return JSON.parse(p); } catch { return [p]; }
+                                                }
+                                                return [p];
+                                            })()
+                                            : []));
+
+                                if (!rawImages || rawImages.length === 0) return null;
+
+                                const formattedUrls = rawImages.map((target: string) => {
+                                    if (target.startsWith("http://") || target.startsWith("https://")) return target;
+                                    const clean = target.startsWith("/") ? target : `/${target}`;
+                                    const storagePath = clean.startsWith("/storage/") ? clean : `/storage${clean}`;
+                                    return `${import.meta.env.VITE_BASE_URL}${storagePath}`;
+                                });
 
                                 return (
-                                    <div className="space-y-2">
-                                        <div className="flex items-center justify-between px-1">
+                                    <div className="space-y-6">
+                                        <div className="flex items-center justify-between px-1 border-b pb-2">
                                             <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                                                Article Document / Graphic
+                                                Article Document ({formattedUrls.length} {formattedUrls.length === 1 ? "Page" : "Pages"})
                                             </span>
-                                            <a
-                                                href={fullUrl}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="text-xs font-medium text-amber-700 hover:text-amber-800 hover:underline flex items-center gap-1"
-                                            >
-                                                Open High-Resolution in New Tab ↗
-                                            </a>
                                         </div>
-                                        <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-gray-100 flex justify-center p-2 sm:p-4">
-                                            <img
-                                                src={fullUrl}
-                                                alt={activeLesson?.title}
-                                                className="w-full max-w-3xl h-auto object-contain rounded-lg shadow-md bg-white"
-                                            />
-                                        </div>
+
+                                        {formattedUrls.map((url: string, index: number) => (
+                                            <div key={index} className="space-y-2">
+                                                <div className="flex items-center justify-between px-1">
+                                                    <span className="text-xs font-bold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
+                                                        Page {index + 1} of {formattedUrls.length}
+                                                    </span>
+                                                    <a
+                                                        href={url}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="text-xs font-medium text-amber-700 hover:text-amber-800 hover:underline flex items-center gap-1"
+                                                    >
+                                                        Open Full Page {index + 1} ↗
+                                                    </a>
+                                                </div>
+                                                <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-gray-100 flex justify-center p-2 sm:p-4">
+                                                    <img
+                                                        src={url}
+                                                        alt={`${activeLesson?.title || "Lesson"} - Page ${index + 1}`}
+                                                        className="w-full max-w-3xl h-auto object-contain rounded-lg shadow-md bg-white"
+                                                    />
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
                                 );
                             })()}

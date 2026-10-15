@@ -64,9 +64,19 @@ export const LessonUpdate = ({ lessonId, courseId, setUpdateModal }: LessonUpdat
     const [isUpload, setIsUpload] = useState(false);
     const [uploadSize, setUploadSize] = useState<number>();
 
-    // Image states
-    const [imageFile, setImageFile] = useState<File | null>(null);
-    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    // Image states (supporting multiple pages/graphics: existing + newly added)
+    interface ExistingImage {
+        path: string;
+        url: string;
+    }
+    interface NewImageItem {
+        id: string;
+        file: File;
+        previewUrl: string;
+    }
+    const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
+    const [deletedImages, setDeletedImages] = useState<string[]>([]);
+    const [newImages, setNewImages] = useState<NewImageItem[]>([]);
 
     const resumableRef = useRef<Resumable | null>(null);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -118,19 +128,36 @@ export const LessonUpdate = ({ lessonId, courseId, setUpdateModal }: LessonUpdat
                 setDurationSeconds(totalSec % 60);
             }
 
-            // Populate image data
-            const rawImage = data.image_url || data.image_path;
-            if (rawImage) {
-                if (rawImage.startsWith("http://") || rawImage.startsWith("https://")) {
-                    setImagePreview(rawImage);
-                } else {
-                    const clean = rawImage.startsWith("/") ? rawImage : `/${rawImage}`;
-                    const storagePath = clean.startsWith("/storage/") ? clean : `/storage${clean}`;
-                    setImagePreview(`${import.meta.env.VITE_BASE_URL}${storagePath}`);
-                }
-            } else {
-                setImagePreview(null);
-            }
+            // Populate multiple images list
+            const rawImages: string[] = Array.isArray(data.images) && data.images.length > 0
+                ? data.images
+                : (data.image_url
+                    ? [data.image_url]
+                    : (data.image_path
+                        ? (() => {
+                            const p = data.image_path;
+                            if (typeof p === "string" && p.startsWith("[") && p.endsWith("]")) {
+                                try { return JSON.parse(p); } catch { return [p]; }
+                            }
+                            return [p];
+                        })()
+                        : []));
+
+            const rawPaths: string[] = Array.isArray(data.image_paths) && data.image_paths.length > 0
+                ? data.image_paths
+                : rawImages;
+
+            const existingList: ExistingImage[] = rawImages.map((img: string, idx: number) => {
+                const url = img.startsWith("http://") || img.startsWith("https://")
+                    ? img
+                    : `${import.meta.env.VITE_BASE_URL}${img.startsWith("/storage/") ? img : `/storage/${img.replace(/^\//, "")}`}`;
+                const path = rawPaths[idx] || img;
+                return { path, url };
+            });
+
+            setExistingImages(existingList);
+            setDeletedImages([]);
+            setNewImages([]);
         }
     }, [singleLesson?.data]);
 
@@ -219,20 +246,42 @@ export const LessonUpdate = ({ lessonId, courseId, setUpdateModal }: LessonUpdat
         };
     };
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        setImageFile(file);
-        setImagePreview(URL.createObjectURL(file));
+    const handleRemoveExistingImage = (pathToRemove: string) => {
+        setExistingImages((prev) => prev.filter((img) => img.path !== pathToRemove));
+        setDeletedImages((prev) => (prev.includes(pathToRemove) ? prev : [...prev, pathToRemove]));
     };
 
-    const handleRemoveImage = () => {
-        if (imagePreview && imageFile) {
-            URL.revokeObjectURL(imagePreview);
+    const handleAddNewImages = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+
+        const newItems: NewImageItem[] = files.map((file) => ({
+            id: `${file.name}-${Date.now()}-${Math.random()}`,
+            file,
+            previewUrl: URL.createObjectURL(file),
+        }));
+
+        setNewImages((prev) => [...prev, ...newItems]);
+        if (imageInputRef.current) {
+            imageInputRef.current.value = "";
         }
-        setImagePreview(null);
-        setImageFile(null);
+    };
+
+    const handleRemoveNewImage = (idToRemove: string) => {
+        setNewImages((prev) => {
+            const item = prev.find((x) => x.id === idToRemove);
+            if (item) URL.revokeObjectURL(item.previewUrl);
+            return prev.filter((x) => x.id !== idToRemove);
+        });
+    };
+
+    const handleClearAllImages = () => {
+        existingImages.forEach((img) => {
+            setDeletedImages((prev) => (prev.includes(img.path) ? prev : [...prev, img.path]));
+        });
+        setExistingImages([]);
+        newImages.forEach((item) => URL.revokeObjectURL(item.previewUrl));
+        setNewImages([]);
         if (imageInputRef.current) {
             imageInputRef.current.value = "";
         }
@@ -330,11 +379,11 @@ export const LessonUpdate = ({ lessonId, courseId, setUpdateModal }: LessonUpdat
         const hasVideo =
             (videoOption === "upload" && Boolean(videoPath || preview || singleLesson?.data?.video_path)) ||
             (videoOption === "url" && Boolean(videoUrlInput.trim()));
-        const hasImage = Boolean(imageFile || imagePreview || singleLesson?.data?.image_path);
+        const hasImage = existingImages.length > 0 || newImages.length > 0;
         const hasText = Boolean(description && description.trim().length > 0);
 
         if (!hasVideo && !hasImage && !hasText) {
-            toast.error("Please provide at least a video, an image, or lesson content.");
+            toast.error("Please provide at least a video, image(s), or lesson content.");
             return;
         }
 
@@ -373,12 +422,20 @@ export const LessonUpdate = ({ lessonId, courseId, setUpdateModal }: LessonUpdat
             formData.append("duration", "0");
         }
 
-        // Image handling (supported alongside video)
-        if (imageFile) {
-            formData.append("image", imageFile);
-        } else if (imagePreview && singleLesson?.data?.image_path) {
-            formData.append("image_path", singleLesson.data.image_path);
-        }
+        // Send retained existing image paths
+        existingImages.forEach((img) => {
+            formData.append("image_paths[]", img.path);
+        });
+
+        // Send deleted image paths for server-side file deletion
+        deletedImages.forEach((delPath) => {
+            formData.append("deleted_images[]", delPath);
+        });
+
+        // Send newly uploaded image files
+        newImages.forEach((item) => {
+            formData.append("images[]", item.file);
+        });
 
         try {
             const confirmed = await uploadAlert();
@@ -677,57 +734,127 @@ export const LessonUpdate = ({ lessonId, courseId, setUpdateModal }: LessonUpdat
                         )}
                     </div>
 
-                {/* 5. Lesson Graphic / Reference Image (Optional) */}
+                {/* 5. Lesson Graphics / Document Pages (Optional) */}
                 <div className="mb-6 p-5 border rounded-xl bg-gray-50/50">
-                    <label className="block text-base font-semibold text-gray-700 mb-1">
-                        Lesson Graphic / Reference Image (Optional)
-                    </label>
-                    <p className="text-xs text-gray-500 mb-3">
-                        Attach or replace an illustrative photo, nail art diagram, or step sheet to accompany this lesson.
+                    <div className="flex items-center justify-between mb-1">
+                        <label className="block text-base font-semibold text-gray-700">
+                            Lesson Graphics / Document Pages (Optional)
+                        </label>
+                        {(existingImages.length > 0 || newImages.length > 0) && (
+                            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                                {existingImages.length + newImages.length} {existingImages.length + newImages.length === 1 ? "Page / Image" : "Pages / Images"} total
+                            </span>
+                        )}
+                    </div>
+                    <p className="text-xs text-gray-500 mb-4">
+                        Attach or replace document pages, illustrative photos, nail art diagrams, or Canva export slides.
                     </p>
 
-                    {imagePreview ? (
-                        <div className="relative border rounded-xl overflow-hidden bg-slate-50 max-w-xl shadow-sm flex justify-center p-2">
-                            <img
-                                src={imagePreview}
-                                alt="Lesson Preview"
-                                className="w-full max-h-96 object-contain rounded-lg"
-                            />
-                            <button
-                                type="button"
-                                onClick={handleRemoveImage}
-                                className="absolute top-3 right-3 bg-red-600 text-white rounded-full p-1.5 shadow hover:bg-red-700 transition"
-                                title="Remove Image"
-                            >
-                                <X size={18} />
-                            </button>
+                    {(existingImages.length > 0 || newImages.length > 0) ? (
+                        <div className="space-y-4 mb-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                                {/* Existing server images */}
+                                {existingImages.map((img, index) => (
+                                    <div
+                                        key={`existing-${img.path}-${index}`}
+                                        className="relative border rounded-xl overflow-hidden bg-white shadow-sm flex flex-col p-2 group"
+                                    >
+                                        <div className="flex items-center justify-between mb-1.5 px-1">
+                                            <span className="text-[11px] font-bold text-gray-700 bg-gray-100 px-2 py-0.5 rounded border border-gray-200">
+                                                Page {index + 1}
+                                            </span>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveExistingImage(img.path)}
+                                                className="w-6 h-6 bg-red-100 hover:bg-red-600 text-red-600 hover:text-white rounded-full flex items-center justify-center transition"
+                                                title="Remove page"
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </div>
+                                        <div className="rounded-lg overflow-hidden bg-slate-50 flex items-center justify-center h-48 border border-slate-100">
+                                            <img
+                                                src={img.url}
+                                                alt={`Page ${index + 1}`}
+                                                className="w-full h-full object-contain"
+                                            />
+                                        </div>
+                                        <p className="text-[11px] text-gray-400 truncate mt-1 px-1">
+                                            Saved on server
+                                        </p>
+                                    </div>
+                                ))}
+
+                                {/* Newly added image items */}
+                                {newImages.map((item, index) => (
+                                    <div
+                                        key={item.id}
+                                        className="relative border-2 border-dashed border-amber-300 rounded-xl overflow-hidden bg-amber-50/20 shadow-sm flex flex-col p-2 group"
+                                    >
+                                        <div className="flex items-center justify-between mb-1.5 px-1">
+                                            <span className="text-[11px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">
+                                                Page {existingImages.length + index + 1} (New)
+                                            </span>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveNewImage(item.id)}
+                                                className="w-6 h-6 bg-red-100 hover:bg-red-600 text-red-600 hover:text-white rounded-full flex items-center justify-center transition"
+                                                title="Remove page"
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </div>
+                                        <div className="rounded-lg overflow-hidden bg-white flex items-center justify-center h-48 border border-amber-200">
+                                            <img
+                                                src={item.previewUrl}
+                                                alt={`New Page ${index + 1}`}
+                                                className="w-full h-full object-contain"
+                                            />
+                                        </div>
+                                        <p className="text-[11px] text-amber-700 font-medium truncate mt-1 px-1" title={item.file.name}>
+                                            + {item.file.name}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="flex items-center justify-between pt-1">
+                                <label className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg cursor-pointer transition">
+                                    <Upload size={14} /> Add more pages / images
+                                    <input
+                                        type="file"
+                                        multiple
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={handleAddNewImages}
+                                    />
+                                </label>
+                                <button
+                                    type="button"
+                                    onClick={handleClearAllImages}
+                                    className="text-xs text-red-600 hover:underline font-medium"
+                                >
+                                    Remove all pages
+                                </button>
+                            </div>
                         </div>
                     ) : (
-                        <label className="w-full h-36 border-2 border-dashed border-gray-300 hover:border-amber-400 rounded-xl flex flex-col items-center justify-center cursor-pointer bg-white transition">
+                        <label className="w-full h-36 border-2 border-dashed border-gray-300 hover:border-amber-400 rounded-xl flex flex-col items-center justify-center cursor-pointer bg-white transition hover:bg-amber-50/20">
                             <ImageIcon size={32} className="text-gray-400 mb-2" />
                             <p className="font-medium text-gray-700">
-                                Click to upload graphic / reference image
+                                Click to upload graphics / document pages
                             </p>
-                            <p className="text-xs text-gray-400 mt-1">PNG, JPG, JPEG, WEBP up to 10MB</p>
+                            <p className="text-xs text-gray-400 mt-1">Select one or multiple PNG, JPG, JPEG, WEBP files (up to 10MB each)</p>
                             <input
                                 ref={imageInputRef}
                                 type="file"
+                                multiple
                                 accept="image/*"
                                 className="hidden"
-                                onChange={handleImageChange}
+                                onChange={handleAddNewImages}
                             />
                         </label>
                     )}
-
-                    {imageFile ? (
-                        <p className="font-semibold text-sm mt-3 text-green-600 flex items-center gap-1.5">
-                            ✓ New image selected: {imageFile.name} (will replace existing image upon saving)
-                        </p>
-                    ) : imagePreview ? (
-                        <p className="font-medium text-xs mt-3 text-gray-500 flex items-center gap-1.5">
-                            Current lesson image active
-                        </p>
-                    ) : null}
                 </div>
 
                 {/* 6. Free Preview Checkbox */}
