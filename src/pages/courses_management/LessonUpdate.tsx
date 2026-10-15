@@ -287,6 +287,69 @@ export const LessonUpdate = ({ lessonId, courseId, setUpdateModal }: LessonUpdat
         }
     };
 
+    // -------------------- Drag & Drop Reordering --------------------
+    const [draggedExistingIndex, setDraggedExistingIndex] = useState<number | null>(null);
+
+    const handleExistingDragStart = (index: number) => {
+        setDraggedExistingIndex(index);
+    };
+
+    const handleExistingDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+    };
+
+    const handleExistingDrop = (dropIndex: number) => {
+        if (draggedExistingIndex === null || draggedExistingIndex === dropIndex) return;
+        setExistingImages((prev) => {
+            const updated = [...prev];
+            const [movedItem] = updated.splice(draggedExistingIndex, 1);
+            updated.splice(dropIndex, 0, movedItem);
+            return updated;
+        });
+        setDraggedExistingIndex(null);
+    };
+
+    const handleMoveExistingImage = (fromIndex: number, toIndex: number) => {
+        if (toIndex < 0 || toIndex >= existingImages.length) return;
+        setExistingImages((prev) => {
+            const updated = [...prev];
+            const [movedItem] = updated.splice(fromIndex, 1);
+            updated.splice(toIndex, 0, movedItem);
+            return updated;
+        });
+    };
+
+    const [draggedNewIndex, setDraggedNewIndex] = useState<number | null>(null);
+
+    const handleNewDragStart = (index: number) => {
+        setDraggedNewIndex(index);
+    };
+
+    const handleNewDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+    };
+
+    const handleNewDrop = (dropIndex: number) => {
+        if (draggedNewIndex === null || draggedNewIndex === dropIndex) return;
+        setNewImages((prev) => {
+            const updated = [...prev];
+            const [movedItem] = updated.splice(draggedNewIndex, 1);
+            updated.splice(dropIndex, 0, movedItem);
+            return updated;
+        });
+        setDraggedNewIndex(null);
+    };
+
+    const handleMoveNewImage = (fromIndex: number, toIndex: number) => {
+        if (toIndex < 0 || toIndex >= newImages.length) return;
+        setNewImages((prev) => {
+            const updated = [...prev];
+            const [movedItem] = updated.splice(fromIndex, 1);
+            updated.splice(toIndex, 0, movedItem);
+            return updated;
+        });
+    };
+
     // YouTube duration parser
     const extractVideoId = (url: string) => {
         const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -757,26 +820,53 @@ export const LessonUpdate = ({ lessonId, courseId, setUpdateModal }: LessonUpdat
                                 {existingImages.map((img, index) => (
                                     <div
                                         key={`existing-${img.path}-${index}`}
-                                        className="relative border rounded-xl overflow-hidden bg-white shadow-sm flex flex-col p-2 group"
+                                        draggable
+                                        onDragStart={() => handleExistingDragStart(index)}
+                                        onDragOver={handleExistingDragOver}
+                                        onDrop={() => handleExistingDrop(index)}
+                                        className={`relative border rounded-xl overflow-hidden bg-white shadow-sm flex flex-col p-2 group transition cursor-move select-none ${
+                                            draggedExistingIndex === index ? "opacity-40 border-amber-500 scale-[0.98]" : "hover:border-amber-400"
+                                        }`}
+                                        title="Drag and drop to reorder"
                                     >
                                         <div className="flex items-center justify-between mb-1.5 px-1">
-                                            <span className="text-[11px] font-bold text-gray-700 bg-gray-100 px-2 py-0.5 rounded border border-gray-200">
-                                                Page {index + 1}
+                                            <span className="text-[11px] font-bold text-gray-700 bg-gray-100 px-2 py-0.5 rounded border border-gray-200 flex items-center gap-1">
+                                                ⋮⋮ Page {index + 1}
                                             </span>
-                                            <button
-                                                type="button"
-                                                onClick={() => handleRemoveExistingImage(img.path)}
-                                                className="w-6 h-6 bg-red-100 hover:bg-red-600 text-red-600 hover:text-white rounded-full flex items-center justify-center transition"
-                                                title="Remove page"
-                                            >
-                                                <X size={14} />
-                                            </button>
+                                            <div className="flex items-center gap-1">
+                                                <button
+                                                    type="button"
+                                                    disabled={index === 0}
+                                                    onClick={(e) => { e.stopPropagation(); handleMoveExistingImage(index, index - 1); }}
+                                                    className="w-5 h-5 bg-gray-100 hover:bg-amber-100 text-gray-700 disabled:opacity-20 disabled:pointer-events-none rounded flex items-center justify-center text-xs font-bold"
+                                                    title="Move Left / Earlier"
+                                                >
+                                                    ←
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    disabled={index === existingImages.length - 1}
+                                                    onClick={(e) => { e.stopPropagation(); handleMoveExistingImage(index, index + 1); }}
+                                                    className="w-5 h-5 bg-gray-100 hover:bg-amber-100 text-gray-700 disabled:opacity-20 disabled:pointer-events-none rounded flex items-center justify-center text-xs font-bold"
+                                                    title="Move Right / Later"
+                                                >
+                                                    →
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => { e.stopPropagation(); handleRemoveExistingImage(img.path); }}
+                                                    className="w-5 h-5 bg-red-100 hover:bg-red-600 text-red-600 hover:text-white rounded flex items-center justify-center transition ml-1"
+                                                    title="Remove page"
+                                                >
+                                                    <X size={12} />
+                                                </button>
+                                            </div>
                                         </div>
                                         <div className="rounded-lg overflow-hidden bg-slate-50 flex items-center justify-center h-48 border border-slate-100">
                                             <img
                                                 src={img.url}
                                                 alt={`Page ${index + 1}`}
-                                                className="w-full h-full object-contain"
+                                                className="w-full h-full object-contain pointer-events-none"
                                             />
                                         </div>
                                         <p className="text-[11px] text-gray-400 truncate mt-1 px-1">
@@ -789,26 +879,53 @@ export const LessonUpdate = ({ lessonId, courseId, setUpdateModal }: LessonUpdat
                                 {newImages.map((item, index) => (
                                     <div
                                         key={item.id}
-                                        className="relative border-2 border-dashed border-amber-300 rounded-xl overflow-hidden bg-amber-50/20 shadow-sm flex flex-col p-2 group"
+                                        draggable
+                                        onDragStart={() => handleNewDragStart(index)}
+                                        onDragOver={handleNewDragOver}
+                                        onDrop={() => handleNewDrop(index)}
+                                        className={`relative border-2 border-dashed border-amber-300 rounded-xl overflow-hidden bg-amber-50/20 shadow-sm flex flex-col p-2 group transition cursor-move select-none ${
+                                            draggedNewIndex === index ? "opacity-40 border-amber-500 scale-[0.98]" : "hover:border-amber-400"
+                                        }`}
+                                        title="Drag and drop to reorder"
                                     >
                                         <div className="flex items-center justify-between mb-1.5 px-1">
-                                            <span className="text-[11px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">
-                                                Page {existingImages.length + index + 1} (New)
+                                            <span className="text-[11px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded border border-amber-300 flex items-center gap-1">
+                                                ⋮⋮ New Page {index + 1}
                                             </span>
-                                            <button
-                                                type="button"
-                                                onClick={() => handleRemoveNewImage(item.id)}
-                                                className="w-6 h-6 bg-red-100 hover:bg-red-600 text-red-600 hover:text-white rounded-full flex items-center justify-center transition"
-                                                title="Remove page"
-                                            >
-                                                <X size={14} />
-                                            </button>
+                                            <div className="flex items-center gap-1">
+                                                <button
+                                                    type="button"
+                                                    disabled={index === 0}
+                                                    onClick={(e) => { e.stopPropagation(); handleMoveNewImage(index, index - 1); }}
+                                                    className="w-5 h-5 bg-amber-100 hover:bg-amber-200 text-amber-900 disabled:opacity-20 disabled:pointer-events-none rounded flex items-center justify-center text-xs font-bold"
+                                                    title="Move Left / Earlier"
+                                                >
+                                                    ←
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    disabled={index === newImages.length - 1}
+                                                    onClick={(e) => { e.stopPropagation(); handleMoveNewImage(index, index + 1); }}
+                                                    className="w-5 h-5 bg-amber-100 hover:bg-amber-200 text-amber-900 disabled:opacity-20 disabled:pointer-events-none rounded flex items-center justify-center text-xs font-bold"
+                                                    title="Move Right / Later"
+                                                >
+                                                    →
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => { e.stopPropagation(); handleRemoveNewImage(item.id); }}
+                                                    className="w-5 h-5 bg-red-100 hover:bg-red-600 text-red-600 hover:text-white rounded flex items-center justify-center transition ml-1"
+                                                    title="Remove page"
+                                                >
+                                                    <X size={12} />
+                                                </button>
+                                            </div>
                                         </div>
                                         <div className="rounded-lg overflow-hidden bg-white flex items-center justify-center h-48 border border-amber-200">
                                             <img
                                                 src={item.previewUrl}
                                                 alt={`New Page ${index + 1}`}
-                                                className="w-full h-full object-contain"
+                                                className="w-full h-full object-contain pointer-events-none"
                                             />
                                         </div>
                                         <p className="text-[11px] text-amber-700 font-medium truncate mt-1 px-1" title={item.file.name}>
